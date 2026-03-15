@@ -42,8 +42,12 @@ const BotBubble = ({ text, theme, showAvatar, avatarUrl }: { text: string; theme
   >
     <div className="h-9 w-9 shrink-0">
       {showAvatar && (
-        <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold ${theme.styles.avatarBg} ${theme.styles.avatarText}`}>
-          Q
+        <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden ${theme.styles.avatarBg} ${theme.styles.avatarText}`}>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            "Q"
+          )}
         </div>
       )}
     </div>
