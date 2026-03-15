@@ -135,19 +135,15 @@ export default function FlowEditor({
       },
     }));
 
-    // Check if any option points to null (end)
-    const hasEnd = questions.some((q) => q.options.some((o) => !o.next_question_id));
-
-    if (hasEnd) {
-      qNodes.push({
-        id: END_NODE_ID,
-        type: "end",
-        position: { x: 600, y: (questions.length - 1) * 200 + 100 },
-        data: {},
-        selectable: false,
-        draggable: true,
-      });
-    }
+    // Always show the End node so users can freely connect to it
+    qNodes.push({
+      id: END_NODE_ID,
+      type: "end",
+      position: { x: 600, y: (questions.length - 1) * 200 + 100 },
+      data: {},
+      selectable: false,
+      draggable: true,
+    });
 
     return qNodes;
   }, [questions, selectedQuestionId]);
