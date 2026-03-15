@@ -39,12 +39,12 @@ const Dashboard = () => {
       setLoading(true);
 
       // Fulfill pending copy shares (recipient duplicates as themselves)
-      const { data: pendingCopies } = await supabase
+      const { data: pendingCopies } = await (supabase
         .from("quiz_shares")
         .select("id, quiz_id")
         .eq("shared_with_user_id", user.id)
-        .eq("permission", "copy")
-        .eq("fulfilled" as any, false);
+        .eq("permission", "copy") as any)
+        .eq("fulfilled", false);
 
       if (pendingCopies && pendingCopies.length > 0) {
         for (const share of pendingCopies) {
