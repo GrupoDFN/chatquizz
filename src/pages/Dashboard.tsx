@@ -251,6 +251,14 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Share Dialog */}
+      <ShareDialog
+        quizId={shareQuiz?.id ?? ""}
+        quizTitle={shareQuiz?.title ?? ""}
+        open={!!shareQuiz}
+        onClose={() => setShareQuiz(null)}
+      />
     </div>
   );
 };
