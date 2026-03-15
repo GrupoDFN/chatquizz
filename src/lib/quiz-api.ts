@@ -4,6 +4,7 @@ export interface QuizRow {
   id: string;
   title: string;
   user_id: string;
+  theme: string;
   created_at: string;
 }
 
