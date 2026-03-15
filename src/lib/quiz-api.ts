@@ -1,5 +1,23 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// Validation constants
+export const LIMITS = {
+  QUIZ_TITLE: 200,
+  QUESTION_TEXT: 1000,
+  OPTION_LABEL: 200,
+  PRE_MESSAGE: 500,
+  PRE_MESSAGES_COUNT: 10,
+  OPTIONS_PER_QUESTION: 10,
+  QUESTIONS_PER_QUIZ: 50,
+} as const;
+
+export function sanitizeInput(input: string): string {
+  return input
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+}
+
 export interface QuizRow {
   id: string;
   title: string;
