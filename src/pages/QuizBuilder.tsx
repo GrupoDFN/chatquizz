@@ -299,6 +299,23 @@ const QuizBuilder = () => {
                 </div>
               </div>
             )}
+            {showEndScreenEditor && (
+              <div className="mb-4 rounded-card bg-card p-4 shadow-card">
+                <h3 className="mb-3 text-sm font-medium text-foreground">Tela Final do Quiz</h3>
+                <EndScreenEditor
+                  config={{
+                    end_screen_template: quiz.end_screen_template || "congrats-green",
+                    end_screen_title: quiz.end_screen_title || "Você foi selecionada!",
+                    end_screen_subtitle: quiz.end_screen_subtitle || "Sua vaga está garantida",
+                    analysis_title: quiz.analysis_title || "ANALISANDO",
+                    analysis_subtitle: quiz.analysis_subtitle || "Sistema em processamento",
+                    show_analysis_card: quiz.show_analysis_card ?? true,
+                    show_congrats_card: quiz.show_congrats_card ?? true,
+                  }}
+                  onChange={handleEndScreenChange}
+                />
+              </div>
+            )}
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-medium text-muted-foreground">Fluxo do Quiz</h2>
               <span className="text-xs tabular-nums text-muted-foreground">
