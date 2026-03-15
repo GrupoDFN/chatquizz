@@ -371,9 +371,17 @@ export default function FlowEditor({
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
       if (node.id === END_NODE_ID) return;
+      if (node.id === ANALYSIS_NODE_ID) {
+        onOpenAnalysis();
+        return;
+      }
+      if (node.id === CONGRATS_NODE_ID) {
+        onOpenCongrats();
+        return;
+      }
       onSelectQuestion(node.id === selectedQuestionId ? null : node.id);
     },
-    [onSelectQuestion, selectedQuestionId]
+    [onSelectQuestion, selectedQuestionId, onOpenAnalysis, onOpenCongrats]
   );
 
   const onPaneClick = useCallback(() => {
