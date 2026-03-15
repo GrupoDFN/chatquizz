@@ -53,12 +53,12 @@ const Dashboard = () => {
 
           if (pendingCopies && pendingCopies.length > 0) {
             for (const share of pendingCopies) {
-              // Delete FIRST to prevent re-processing on concurrent loads
-              await supabase.from("quiz_shares").delete().eq("id", share.id);
               try {
                 await duplicateQuiz(share.quiz_id, user.id, true);
+                // Remove pending share after successful duplication
+                await supabase.from("quiz_shares").delete().eq("id", share.id);
               } catch {
-                // Duplication failed but share is already deleted — no infinite loop
+                // keep pending share to retry later
               }
             }
           }
