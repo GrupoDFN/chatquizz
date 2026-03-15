@@ -42,6 +42,7 @@ interface QuestionData {
 }
 
 interface FlowEditorProps {
+  quizId: string;
   questions: QuestionData[];
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string | null) => void;
@@ -60,6 +61,38 @@ interface FlowEditorProps {
 const END_NODE_ID = "__end__";
 const ANALYSIS_NODE_ID = "__analysis__";
 const CONGRATS_NODE_ID = "__congrats__";
+const SPECIAL_IDS = [END_NODE_ID, ANALYSIS_NODE_ID, CONGRATS_NODE_ID];
+
+interface PersistedSpecialEdge {
+  id: string;
+  source: string;
+  sourceHandle?: string | null;
+  target: string;
+  targetHandle?: string | null;
+}
+
+interface PersistedFlowLayout {
+  positions: Record<string, { x: number; y: number }>;
+  specialEdges: PersistedSpecialEdge[];
+}
+
+const buildSpecialEdgeId = (connection: Connection) =>
+  `special-${connection.source ?? ""}-${connection.sourceHandle ?? "default"}-${connection.target ?? ""}-${connection.targetHandle ?? "default"}`;
+
+const createSpecialEdge = (connection: Connection): Edge | null => {
+  if (!connection.source || !connection.target) return null;
+
+  return {
+    id: buildSpecialEdgeId(connection),
+    source: connection.source,
+    sourceHandle: connection.sourceHandle,
+    target: connection.target,
+    targetHandle: connection.targetHandle,
+    type: "smoothstep",
+    style: { stroke: "hsl(var(--accent-foreground) / 0.55)", strokeWidth: 2, strokeDasharray: "5 3" },
+    markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--accent-foreground) / 0.55)" },
+  };
+};
 
 function EndNode() {
   return (
@@ -221,6 +254,7 @@ const nodeTypes = {
 
 /* ─── Main Component ─── */
 export default function FlowEditor({
+  quizId,
   questions,
   selectedQuestionId,
   onSelectQuestion,
@@ -234,9 +268,73 @@ export default function FlowEditor({
   endScreenTitle,
   activeEndPanel,
 }: FlowEditorProps) {
-  // Track user-dragged positions
-  const positionsRef = useRef<Record<string, { x: number; y: number }>>({});
-  const initializedRef = useRef(false);
+  const storageKey = useMemo(() => `chatquiz_flow_layout:${quizId}`, [quizId]);
+
+  const persistedLayout = useMemo<PersistedFlowLayout>(() => {
+    if (typeof window === "undefined") {
+      return { positions: {}, specialEdges: [] };
+    }
+
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return { positions: {}, specialEdges: [] };
+
+      const parsed = JSON.parse(raw) as Partial<PersistedFlowLayout>;
+      return {
+        positions: parsed.positions ?? {},
+        specialEdges: parsed.specialEdges ?? [],
+      };
+    } catch {
+      return { positions: {}, specialEdges: [] };
+    }
+  }, [storageKey]);
+
+  const positionsRef = useRef<Record<string, { x: number; y: number }>>(persistedLayout.positions);
+  const persistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [specialEdges, setSpecialEdges] = useState<Edge[]>(() =>
+    persistedLayout.specialEdges.map((edge) => ({
+      ...edge,
+      type: "smoothstep",
+      style: { stroke: "hsl(var(--accent-foreground) / 0.55)", strokeWidth: 2, strokeDasharray: "5 3" },
+      markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--accent-foreground) / 0.55)" },
+    }))
+  );
+
+  const persistLayout = useCallback(
+    (nextSpecialEdges: Edge[]) => {
+      if (typeof window === "undefined") return;
+
+      const payload: PersistedFlowLayout = {
+        positions: positionsRef.current,
+        specialEdges: nextSpecialEdges.map((edge) => ({
+          id: edge.id,
+          source: edge.source,
+          sourceHandle: edge.sourceHandle,
+          target: edge.target,
+          targetHandle: edge.targetHandle,
+        })),
+      };
+
+      localStorage.setItem(storageKey, JSON.stringify(payload));
+    },
+    [storageKey]
+  );
+
+  const schedulePersist = useCallback(
+    (nextSpecialEdges: Edge[]) => {
+      if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
+      persistTimeoutRef.current = setTimeout(() => {
+        persistLayout(nextSpecialEdges);
+      }, 200);
+    },
+    [persistLayout]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
+    };
+  }, []);
 
   /* Convert questions to nodes */
   const initialNodes = useMemo(() => {
@@ -290,14 +388,14 @@ export default function FlowEditor({
     return qNodes;
   }, [questions, selectedQuestionId, showAnalysisCard, showCongratsCard, analysisTitle, endScreenTitle, activeEndPanel]);
 
-  /* Convert options to edges */
-  const initialEdges = useMemo(() => {
-    const edges: Edge[] = [];
+  /* Convert DB options to edges */
+  const questionEdges = useMemo(() => {
+    const dbEdges: Edge[] = [];
     questions.forEach((q) => {
       if (q.type === "text") {
         const firstOpt = q.options[0];
         if (firstOpt?.next_question_id) {
-          edges.push({
+          dbEdges.push({
             id: `e-${firstOpt.id}`,
             source: q.id,
             sourceHandle: "text-output",
@@ -310,7 +408,7 @@ export default function FlowEditor({
       } else {
         q.options.forEach((opt) => {
           if (!opt.next_question_id) return;
-          edges.push({
+          dbEdges.push({
             id: `e-${opt.id}`,
             source: q.id,
             sourceHandle: opt.id,
@@ -322,95 +420,138 @@ export default function FlowEditor({
         });
       }
     });
-    return edges;
+    return dbEdges;
   }, [questions]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const validNodeIds = useMemo(() => new Set(initialNodes.map((node) => node.id)), [initialNodes]);
 
-  // Save positions whenever nodes change (drag etc.)
+  const filteredSpecialEdges = useMemo(
+    () => specialEdges.filter((edge) => validNodeIds.has(edge.source) && validNodeIds.has(edge.target)),
+    [specialEdges, validNodeIds]
+  );
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([...questionEdges, ...filteredSpecialEdges]);
+
   const handleNodesChange = useCallback(
     (changes: any) => {
       onNodesChange(changes);
-      // After changes applied, capture positions
-      setTimeout(() => {
-        setNodes((currentNodes) => {
-          currentNodes.forEach((n) => {
-            positionsRef.current[n.id] = { ...n.position };
-          });
-          return currentNodes;
-        });
-      }, 0);
     },
-    [onNodesChange, setNodes]
+    [onNodesChange]
   );
 
   useEffect(() => {
-    // On first load, set positions from initial layout
-    if (!initializedRef.current) {
-      initialNodes.forEach((n) => {
-        if (!positionsRef.current[n.id]) {
-          positionsRef.current[n.id] = { ...n.position };
-        }
-      });
-      initializedRef.current = true;
-    }
-
-    // Update node data (labels, options, selection) without resetting positions
     setNodes((currentNodes) => {
       const currentPosMap: Record<string, { x: number; y: number }> = {};
-      currentNodes.forEach((n) => {
-        currentPosMap[n.id] = { ...n.position };
+      currentNodes.forEach((node) => {
+        currentPosMap[node.id] = { ...node.position };
       });
 
-      return initialNodes.map((n) => ({
-        ...n,
-        position: currentPosMap[n.id] || positionsRef.current[n.id] || n.position,
+      return initialNodes.map((node) => ({
+        ...node,
+        position: currentPosMap[node.id] || positionsRef.current[node.id] || node.position,
       }));
     });
 
-    setEdges(initialEdges);
-  }, [initialNodes, initialEdges, setNodes, setEdges]);
+    setEdges([...questionEdges, ...filteredSpecialEdges]);
+  }, [initialNodes, questionEdges, filteredSpecialEdges, setNodes, setEdges]);
 
-  const SPECIAL_IDS = [END_NODE_ID, ANALYSIS_NODE_ID, CONGRATS_NODE_ID];
+  useEffect(() => {
+    setSpecialEdges((current) => {
+      const next = current.filter((edge) => validNodeIds.has(edge.source) && validNodeIds.has(edge.target));
+      if (next.length === current.length) return current;
+      schedulePersist(next);
+      return next;
+    });
+  }, [validNodeIds, schedulePersist]);
+
+  useEffect(() => {
+    nodes.forEach((node) => {
+      positionsRef.current[node.id] = { ...node.position };
+    });
+    schedulePersist(filteredSpecialEdges);
+  }, [nodes, filteredSpecialEdges, schedulePersist]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      if (!connection.sourceHandle || !connection.target) return;
+      if (!connection.source || !connection.target || !connection.sourceHandle) return;
 
-      // Don't save connections from/to special (non-DB) nodes
-      if (SPECIAL_IDS.includes(connection.source!) || SPECIAL_IDS.includes(connection.target!)) return;
+      const isSpecialConnection =
+        SPECIAL_IDS.includes(connection.source) || SPECIAL_IDS.includes(connection.target);
 
-      const handleId = connection.sourceHandle;
-      const targetId = connection.target;
+      if (isSpecialConnection) {
+        const specialEdge = createSpecialEdge(connection);
+        if (!specialEdge) return;
 
-      if (handleId === "text-output") {
-        const sourceQ = questions.find((q) => q.id === connection.source);
-        if (sourceQ?.options[0]) {
-          onConnectionChange(sourceQ.options[0].id, targetId);
+        setSpecialEdges((current) => {
+          const next = [...current.filter((edge) => edge.id !== specialEdge.id), specialEdge];
+          schedulePersist(next);
+          return next;
+        });
+
+        if (!SPECIAL_IDS.includes(connection.source)) {
+          if (connection.sourceHandle === "text-output") {
+            const sourceQuestion = questions.find((question) => question.id === connection.source);
+            if (sourceQuestion?.options[0]) {
+              onConnectionChange(sourceQuestion.options[0].id, null);
+            }
+          } else {
+            onConnectionChange(connection.sourceHandle, null);
+          }
+        }
+
+        return;
+      }
+
+      if (connection.sourceHandle === "text-output") {
+        const sourceQuestion = questions.find((question) => question.id === connection.source);
+        if (sourceQuestion?.options[0]) {
+          onConnectionChange(sourceQuestion.options[0].id, connection.target);
         }
         return;
       }
 
-      onConnectionChange(handleId, targetId);
+      onConnectionChange(connection.sourceHandle, connection.target);
     },
-    [onConnectionChange, questions]
+    [onConnectionChange, questions, schedulePersist]
   );
 
   const onEdgeDelete = useCallback(
     (deletedEdges: Edge[]) => {
-      deletedEdges.forEach((edge) => {
-        if (edge.sourceHandle === "text-output") {
-          const sourceQ = questions.find((q) => q.id === edge.source);
-          if (sourceQ?.options[0]) {
-            onConnectionChange(sourceQ.options[0].id, null);
+      const deletedSpecialIds = new Set(
+        deletedEdges
+          .filter(
+            (edge) =>
+              edge.id.startsWith("special-") || SPECIAL_IDS.includes(edge.source) || SPECIAL_IDS.includes(edge.target)
+          )
+          .map((edge) => edge.id)
+      );
+
+      if (deletedSpecialIds.size > 0) {
+        setSpecialEdges((current) => {
+          const next = current.filter((edge) => !deletedSpecialIds.has(edge.id));
+          schedulePersist(next);
+          return next;
+        });
+      }
+
+      deletedEdges
+        .filter(
+          (edge) =>
+            !(edge.id.startsWith("special-") || SPECIAL_IDS.includes(edge.source) || SPECIAL_IDS.includes(edge.target))
+        )
+        .forEach((edge) => {
+          if (edge.sourceHandle === "text-output") {
+            const sourceQuestion = questions.find((question) => question.id === edge.source);
+            if (sourceQuestion?.options[0]) {
+              onConnectionChange(sourceQuestion.options[0].id, null);
+            }
+          } else if (edge.sourceHandle) {
+            onConnectionChange(edge.sourceHandle, null);
           }
-        } else if (edge.sourceHandle) {
-          onConnectionChange(edge.sourceHandle, null);
-        }
-      });
+        });
     },
-    [onConnectionChange, questions]
+    [onConnectionChange, questions, schedulePersist]
   );
 
   const onNodeClick = useCallback(
