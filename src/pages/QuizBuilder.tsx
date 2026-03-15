@@ -269,24 +269,12 @@ const QuizBuilder = () => {
         >
           {selectedQuestion && (
             <QuestionCard
-              question={{
-                ...selectedQuestion,
-                quizId: quiz.id,
-                options: selectedQuestion.options.map((o) => ({
-                  ...o,
-                  questionId: o.question_id,
-                  nextQuestionId: o.next_question_id,
-                })),
-              }}
+              question={selectedQuestion}
               questionIndex={quiz.questions.indexOf(selectedQuestion)}
               allQuestions={quiz.questions.map((q) => ({
-                ...q,
-                quizId: q.quiz_id,
-                options: q.options.map((o) => ({
-                  ...o,
-                  questionId: o.question_id,
-                  nextQuestionId: o.next_question_id,
-                })),
+                id: q.id,
+                text: q.text,
+                options: q.options,
               }))}
               onTextChange={(text) => handleQuestionTextChange(selectedQuestion.id, text)}
               onOptionLabelChange={(optionId, label) => handleOptionLabelChange(selectedQuestion.id, optionId, label)}
