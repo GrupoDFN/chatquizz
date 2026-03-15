@@ -98,8 +98,10 @@ const QuizBuilder = () => {
 
   const handleEndScreenChange = async (key: string, value: string | boolean) => {
     setQuiz({ ...quiz, [key]: value } as any);
-    try { await updateQuizEndScreen(quiz.id, { [key]: value } as any); }
-    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
+    try {
+      await updateQuizEndScreen(quiz.id, { [key]: value } as any);
+      toast({ title: "✓ Salvo!" });
+    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleQuestionTextChange = async (questionId: string, text: string) => {
