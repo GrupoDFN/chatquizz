@@ -114,6 +114,12 @@ export async function updateQuizTitle(quizId: string, title: string): Promise<vo
   if (error) throw error;
 }
 
+// Update quiz theme
+export async function updateQuizTheme(quizId: string, theme: string): Promise<void> {
+  const { error } = await supabase.from("quizzes").update({ theme }).eq("id", quizId);
+  if (error) throw error;
+}
+
 // Add a question to a quiz
 export async function addQuestion(quizId: string, order: number): Promise<QuestionRow> {
   const { data, error } = await supabase
