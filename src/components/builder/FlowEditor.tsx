@@ -169,6 +169,8 @@ export default function FlowEditor({
   onSelectQuestion,
   onConnectionChange,
   onAddCard,
+  onOpenAnalysis,
+  onOpenCongrats,
 }: FlowEditorProps) {
   /* Convert questions to nodes */
   const initialNodes = useMemo(() => {
