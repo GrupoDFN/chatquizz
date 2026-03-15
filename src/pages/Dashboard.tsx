@@ -171,9 +171,16 @@ const Dashboard = () => {
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
                     <h3 className="text-base font-medium text-foreground truncate">{quiz.title}</h3>
-                    <p className="mt-1 text-xs tabular-nums text-muted-foreground">
-                      {new Date(quiz.created_at).toLocaleDateString("pt-BR")}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs tabular-nums text-muted-foreground">
+                        {new Date(quiz.created_at).toLocaleDateString("pt-BR")}
+                      </p>
+                      {quiz.isShared && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          Compartilhado
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
