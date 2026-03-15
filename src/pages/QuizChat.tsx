@@ -261,9 +261,7 @@ const QuizChat = () => {
         setIsTyping(false);
         addMsg("bot", question.text);
 
-        // If all options point to end (null), auto-trigger end sequence
-        const allOptionsEnd = question.options.length > 0 && question.options.every((o) => !o.next_question_id);
-        if (allOptionsEnd || question.options.length === 0) {
+        if (question.options.length === 0) {
           setTimeout(() => showEndSequence(), 800);
         } else {
           setCurrentQuestion(question);
