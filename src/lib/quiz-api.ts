@@ -142,6 +142,12 @@ export async function updateQuizVerifiedBadge(quizId: string, show: boolean): Pr
   if (error) throw error;
 }
 
+// Update end screen config
+export async function updateQuizEndScreen(quizId: string, updates: Partial<Pick<QuizRow, 'end_screen_template' | 'end_screen_title' | 'end_screen_subtitle' | 'analysis_title' | 'analysis_subtitle' | 'show_analysis_card' | 'show_congrats_card'>>): Promise<void> {
+  const { error } = await supabase.from("quizzes").update(updates as any).eq("id", quizId);
+  if (error) throw error;
+}
+
 // Upload avatar image
 export async function uploadAvatar(quizId: string, file: File): Promise<string> {
   const ext = file.name.split(".").pop();
