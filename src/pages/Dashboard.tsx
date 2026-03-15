@@ -236,11 +236,12 @@ const Dashboard = () => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => handleDelete(quiz.id, quiz.title)}
+                        onClick={() => handleDelete(quiz.id, quiz.title, quiz.isShared)}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Excluir
+                        {quiz.isShared ? "Remover" : "Excluir"}
+                      </DropdownMenuItem>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
