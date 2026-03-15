@@ -4,6 +4,7 @@ export interface QuizRow {
   id: string;
   title: string;
   user_id: string;
+  theme: string;
   created_at: string;
 }
 
@@ -110,6 +111,12 @@ export async function deleteQuiz(quizId: string): Promise<void> {
 // Update quiz title
 export async function updateQuizTitle(quizId: string, title: string): Promise<void> {
   const { error } = await supabase.from("quizzes").update({ title }).eq("id", quizId);
+  if (error) throw error;
+}
+
+// Update quiz theme
+export async function updateQuizTheme(quizId: string, theme: string): Promise<void> {
+  const { error } = await supabase.from("quizzes").update({ theme }).eq("id", quizId);
   if (error) throw error;
 }
 

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Link as LinkIcon, Eye, ChevronRight } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Link as LinkIcon, Eye, ChevronRight, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getQuizFull, updateQuizTitle, updateQuestionText, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuestionText, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
 import { toast } from "@/hooks/use-toast";
+import ThemePicker from "@/components/builder/ThemePicker";
 import QuestionCard from "@/components/builder/QuestionCard";
 import FlowConnections from "@/components/builder/FlowConnections";
 
@@ -13,6 +14,7 @@ const QuizBuilder = () => {
   const [quiz, setQuiz] = useState<QuizWithQuestionsAndOptions | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  const [showThemePicker, setShowThemePicker] = useState(false);
 
   const loadQuiz = useCallback(async () => {
     if (!id) return;
@@ -47,6 +49,15 @@ const QuizBuilder = () => {
     setQuiz({ ...quiz, title });
     try {
       await updateQuizTitle(quiz.id, title);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleThemeChange = async (theme: string) => {
+    setQuiz({ ...quiz, theme });
+    try {
+      await updateQuizTheme(quiz.id, theme);
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
@@ -178,6 +189,10 @@ const QuizBuilder = () => {
             />
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowThemePicker(!showThemePicker)}>
+              <Palette className="h-4 w-4" />
+              <span className="hidden sm:inline">Tema</span>
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleCopyLink}>
               <LinkIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Link</span>
@@ -194,6 +209,15 @@ const QuizBuilder = () => {
         {/* Flow View */}
         <div className="flex-1 overflow-auto p-6">
           <div className="mx-auto max-w-xl space-y-3">
+            {showThemePicker && (
+              <div className="mb-4 rounded-card bg-card p-4 shadow-card">
+                <h3 className="mb-3 text-sm font-medium text-foreground">Tema do Chat</h3>
+                <ThemePicker
+                  selectedTheme={quiz.theme || "dark-social"}
+                  onSelectTheme={handleThemeChange}
+                />
+              </div>
+            )}
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-medium text-muted-foreground">Fluxo do Quiz</h2>
               <span className="text-xs tabular-nums text-muted-foreground">
