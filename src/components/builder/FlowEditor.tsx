@@ -154,10 +154,6 @@ export default function FlowEditor({
     questions.forEach((q) => {
       q.options.forEach((opt) => {
         const target = opt.next_question_id || END_NODE_ID;
-        // Only create edge to END if end node exists
-        if (target === END_NODE_ID && !questions.some((qq) => qq.options.some((o) => !o.next_question_id))) {
-          return;
-        }
         edges.push({
           id: `e-${opt.id}`,
           source: q.id,
