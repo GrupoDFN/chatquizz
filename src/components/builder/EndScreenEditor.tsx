@@ -17,6 +17,7 @@ interface EndScreenConfig {
 interface EndScreenEditorProps {
   config: EndScreenConfig;
   onChange: (key: keyof EndScreenConfig, value: string | boolean) => void;
+  showOnly?: "template";
 }
 
 const MiniCongratsPreview = ({ template }: { template: EndScreenTemplate }) => (
@@ -31,9 +32,32 @@ const MiniCongratsPreview = ({ template }: { template: EndScreenTemplate }) => (
   </div>
 );
 
-const EndScreenEditor = ({ config, onChange }: EndScreenEditorProps) => {
+const EndScreenEditor = ({ config, onChange, showOnly }: EndScreenEditorProps) => {
   const currentTemplate = getEndScreenTemplate(config.end_screen_template);
 
+  if (showOnly === "template") {
+    return (
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Template visual</label>
+        <div className="grid grid-cols-3 gap-2">
+          {endScreenTemplates.map((tmpl) => (
+            <button
+              key={tmpl.id}
+              onClick={() => onChange("end_screen_template", tmpl.id)}
+              className={`rounded-lg p-1 transition-all border-2 ${
+                config.end_screen_template === tmpl.id
+                  ? "border-primary ring-1 ring-primary/30"
+                  : "border-transparent hover:border-border"
+              }`}
+            >
+              <MiniCongratsPreview template={tmpl} />
+              <p className="mt-1 text-[9px] text-center text-muted-foreground truncate">{tmpl.name}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-5">
       {/* Toggle cards */}

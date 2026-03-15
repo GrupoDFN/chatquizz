@@ -15,7 +15,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Flag, Plus, MessageSquare, HelpCircle } from "lucide-react";
+import { Flag, Plus, MessageSquare, HelpCircle, BarChart3, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -47,6 +47,8 @@ interface FlowEditorProps {
   onSelectQuestion: (id: string | null) => void;
   onConnectionChange: (optionId: string, nextQuestionId: string | null) => void;
   onAddCard: (type: "question" | "text") => void;
+  onOpenAnalysis: () => void;
+  onOpenCongrats: () => void;
 }
 
 /* ─── End Node ─── */
@@ -167,6 +169,8 @@ export default function FlowEditor({
   onSelectQuestion,
   onConnectionChange,
   onAddCard,
+  onOpenAnalysis,
+  onOpenCongrats,
 }: FlowEditorProps) {
   /* Convert questions to nodes */
   const initialNodes = useMemo(() => {
@@ -339,6 +343,20 @@ export default function FlowEditor({
               <div>
                 <p className="text-sm font-medium">Card de Texto</p>
                 <p className="text-[11px] text-muted-foreground">Enviar uma mensagem para a pessoa</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenAnalysis} className="gap-2 cursor-pointer">
+              <BarChart3 className="h-4 w-4 text-orange-500" />
+              <div>
+                <p className="text-sm font-medium">Card de Análise</p>
+                <p className="text-[11px] text-muted-foreground">Tela de carregamento antes do resultado</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenCongrats} className="gap-2 cursor-pointer">
+              <PartyPopper className="h-4 w-4 text-emerald-500" />
+              <div>
+                <p className="text-sm font-medium">Card de Resposta</p>
+                <p className="text-[11px] text-muted-foreground">Tela final com resultado do quiz</p>
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
