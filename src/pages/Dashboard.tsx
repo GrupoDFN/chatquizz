@@ -69,7 +69,11 @@ const Dashboard = () => {
 
       // Own quizzes (includes newly duplicated ones)
       const ownData = await getUserQuizzes();
-      const ownQuizzes: QuizRow[] = ownData.map((q) => ({ ...q, isShared: false }));
+      const ownQuizzes: QuizRow[] = ownData.map((q: any) => ({
+        ...q,
+        isShared: false,
+        isCopy: q.is_copy === true,
+      }));
 
       // Shared quizzes (edit mode only)
       const { data: shares } = await supabase
