@@ -345,6 +345,20 @@ export default function FlowEditor({
                 <p className="text-[11px] text-muted-foreground">Enviar uma mensagem para a pessoa</p>
               </div>
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenAnalysis} className="gap-2 cursor-pointer">
+              <BarChart3 className="h-4 w-4 text-orange-500" />
+              <div>
+                <p className="text-sm font-medium">Card de Análise</p>
+                <p className="text-[11px] text-muted-foreground">Tela de carregamento antes do resultado</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onOpenCongrats} className="gap-2 cursor-pointer">
+              <PartyPopper className="h-4 w-4 text-emerald-500" />
+              <div>
+                <p className="text-sm font-medium">Card de Resposta</p>
+                <p className="text-[11px] text-muted-foreground">Tela final com resultado do quiz</p>
+              </div>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
