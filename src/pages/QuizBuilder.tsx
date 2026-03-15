@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2, Link as LinkIcon, Eye, ChevronRight, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuestionText, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuizAvatar, updateQuizVerifiedBadge, uploadAvatar, updateQuestionText, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
 import { toast } from "@/hooks/use-toast";
 import ThemePicker from "@/components/builder/ThemePicker";
 import QuestionCard from "@/components/builder/QuestionCard";
