@@ -259,8 +259,32 @@ export default function FlowEditor({
       draggable: true,
     });
 
+    // Analysis card node
+    if (showAnalysisCard) {
+      qNodes.push({
+        id: ANALYSIS_NODE_ID,
+        type: "analysis",
+        position: { x: 650, y: 0 },
+        selected: activeEndPanel === "analysis",
+        data: { label: analysisTitle || "ANALISANDO" },
+        draggable: true,
+      });
+    }
+
+    // Congrats card node
+    if (showCongratsCard) {
+      qNodes.push({
+        id: CONGRATS_NODE_ID,
+        type: "congrats",
+        position: { x: 650, y: showAnalysisCard ? 150 : 0 },
+        selected: activeEndPanel === "congrats",
+        data: { label: endScreenTitle || "Resposta Final" },
+        draggable: true,
+      });
+    }
+
     return qNodes;
-  }, [questions, selectedQuestionId]);
+  }, [questions, selectedQuestionId, showAnalysisCard, showCongratsCard, analysisTitle, endScreenTitle, activeEndPanel]);
 
   /* Convert options to edges — only when explicitly connected */
   const initialEdges = useMemo(() => {
