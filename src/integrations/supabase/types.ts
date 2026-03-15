@@ -200,6 +200,7 @@ export type Database = {
       quiz_shares: {
         Row: {
           created_at: string
+          fulfilled: boolean
           id: string
           owner_id: string
           permission: string
@@ -208,6 +209,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          fulfilled?: boolean
           id?: string
           owner_id: string
           permission?: string
@@ -216,6 +218,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          fulfilled?: boolean
           id?: string
           owner_id?: string
           permission?: string
