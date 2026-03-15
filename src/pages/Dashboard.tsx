@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, MessageSquare, LogOut, MoreVertical, Pencil, Eye, Copy, Share2, Trash2, BarChart3 } from "lucide-react";
+import { Plus, LogOut, MoreVertical, Pencil, Eye, Copy, Share2, Trash2, BarChart3 } from "lucide-react";
+import chatFunnelLogo from "@/assets/logo-chatfunnel.png";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
