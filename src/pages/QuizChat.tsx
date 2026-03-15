@@ -194,7 +194,7 @@ const QuizChat = () => {
             {messages.map((msg, idx) => {
               const showAvatar = msg.type === "bot" && (idx === 0 || messages[idx - 1]?.type !== "bot");
               return msg.type === "bot" ? (
-                <BotBubble key={msg.id} text={msg.text} theme={theme} showAvatar={showAvatar} />
+                <BotBubble key={msg.id} text={msg.text} theme={theme} showAvatar={showAvatar} avatarUrl={quiz.avatar_url} />
               ) : (
                 <UserBubble key={msg.id} text={msg.text} theme={theme} />
               );
