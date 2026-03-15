@@ -322,6 +322,8 @@ const QuizChat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const msgCounter = useRef(0);
   const initiated = useRef(false);
+  const stepCounter = useRef(0);
+  const sessionId = useRef<string>("");
 
   const theme = getThemeById(quiz?.theme || "dark-social");
 
