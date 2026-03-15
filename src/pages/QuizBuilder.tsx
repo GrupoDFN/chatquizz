@@ -314,7 +314,7 @@ const QuizBuilder = () => {
             </div>
           )}
 
-          {selectedQuestion && (selectedQuestion as any).type === "text" ? (
+          {selectedQuestion && selectedQuestion.type === "text" ? (
             <TextCard
               questionId={selectedQuestion.id}
               text={selectedQuestion.text}
