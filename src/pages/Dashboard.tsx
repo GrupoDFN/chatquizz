@@ -44,15 +44,17 @@ const Dashboard = () => {
         .select("id, quiz_id")
         .eq("shared_with_user_id", user.id)
         .eq("permission", "copy")
-        .eq("fulfilled", false);
+        .eq("fulfilled" as any, false);
 
       if (pendingCopies && pendingCopies.length > 0) {
         for (const share of pendingCopies) {
           try {
             await duplicateQuiz(share.quiz_id, user.id);
-            await supabase.from("quiz_shares").update({ fulfilled: true } as any).eq("id", share.id);
+            // Delete the share after fulfillment to prevent re-duplication
+            await supabase.from("quiz_shares").delete().eq("id", share.id);
           } catch {
-            // skip failed duplications silently
+            // If duplication fails, still mark as fulfilled to prevent infinite loop
+            await supabase.from("quiz_shares").delete().eq("id", share.id);
           }
         }
       }
