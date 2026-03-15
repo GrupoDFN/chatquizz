@@ -54,6 +54,15 @@ const QuizBuilder = () => {
     }
   };
 
+  const handleThemeChange = async (theme: string) => {
+    setQuiz({ ...quiz, theme });
+    try {
+      await updateQuizTheme(quiz.id, theme);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleQuestionTextChange = async (questionId: string, text: string) => {
     setQuiz({
       ...quiz,
