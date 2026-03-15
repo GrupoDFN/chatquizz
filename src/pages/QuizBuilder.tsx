@@ -328,6 +328,91 @@ const QuizBuilder = () => {
             </div>
           )}
 
+          {endScreenPanel === "analysis" && (
+            <div className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-foreground">Card de Análise</h3>
+                <Button variant="ghost" size="sm" onClick={() => setEndScreenPanel(null)}>✕</Button>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quiz.show_analysis_card ?? true}
+                  onChange={(e) => handleEndScreenChange("show_analysis_card", e.target.checked)}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                />
+                <span className="text-sm text-foreground">Ativar card de análise</span>
+              </label>
+              {(quiz.show_analysis_card ?? true) && (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={quiz.analysis_title || "ANALISANDO"}
+                    onChange={(e) => handleEndScreenChange("analysis_title", e.target.value)}
+                    placeholder="Título da análise..."
+                    className="w-full rounded-md bg-secondary px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <input
+                    type="text"
+                    value={quiz.analysis_subtitle || "Sistema em processamento"}
+                    onChange={(e) => handleEndScreenChange("analysis_subtitle", e.target.value)}
+                    placeholder="Subtítulo da análise..."
+                    className="w-full rounded-md bg-secondary px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {endScreenPanel === "congrats" && (
+            <div className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-foreground">Card de Resposta</h3>
+                <Button variant="ghost" size="sm" onClick={() => setEndScreenPanel(null)}>✕</Button>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quiz.show_congrats_card ?? true}
+                  onChange={(e) => handleEndScreenChange("show_congrats_card", e.target.checked)}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                />
+                <span className="text-sm text-foreground">Ativar card de resposta</span>
+              </label>
+              {(quiz.show_congrats_card ?? true) && (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={quiz.end_screen_title || "Você foi selecionada!"}
+                    onChange={(e) => handleEndScreenChange("end_screen_title", e.target.value)}
+                    placeholder="Título..."
+                    className="w-full rounded-md bg-secondary px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <input
+                    type="text"
+                    value={quiz.end_screen_subtitle || "Sua vaga está garantida"}
+                    onChange={(e) => handleEndScreenChange("end_screen_subtitle", e.target.value)}
+                    placeholder="Subtítulo..."
+                    className="w-full rounded-md bg-secondary px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <EndScreenEditor
+                    config={{
+                      end_screen_template: quiz.end_screen_template || "congrats-green",
+                      end_screen_title: quiz.end_screen_title || "Você foi selecionada!",
+                      end_screen_subtitle: quiz.end_screen_subtitle || "Sua vaga está garantida",
+                      analysis_title: quiz.analysis_title || "ANALISANDO",
+                      analysis_subtitle: quiz.analysis_subtitle || "Sistema em processamento",
+                      show_analysis_card: quiz.show_analysis_card ?? true,
+                      show_congrats_card: quiz.show_congrats_card ?? true,
+                    }}
+                    onChange={handleEndScreenChange}
+                    showOnly="template"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           {selectedQuestion && selectedQuestion.type === "text" ? (
             <TextCard
               questionId={selectedQuestion.id}
