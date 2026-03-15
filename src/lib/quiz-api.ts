@@ -5,6 +5,8 @@ export interface QuizRow {
   title: string;
   user_id: string;
   theme: string;
+  avatar_url: string | null;
+  show_verified_badge: boolean;
   created_at: string;
 }
 
