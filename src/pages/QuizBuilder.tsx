@@ -142,9 +142,9 @@ const QuizBuilder = () => {
     }
   };
 
-  const handleAddQuestion = async () => {
+  const handleAddCard = async (type: "question" | "text") => {
     try {
-      const newQ = await addQuestion(quiz.id, quiz.questions.length);
+      const newQ = await addQuestion(quiz.id, quiz.questions.length, type);
       await loadQuiz();
       setSelectedQuestionId(newQ.id);
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
