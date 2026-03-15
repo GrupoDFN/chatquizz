@@ -16,6 +16,7 @@ const QuizBuilder = () => {
   const [loading, setLoading] = useState(true);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showEndScreenEditor, setShowEndScreenEditor] = useState(false);
 
   const loadQuiz = useCallback(async () => {
     if (!id) return;
