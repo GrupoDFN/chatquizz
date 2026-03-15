@@ -443,6 +443,10 @@ const QuizChat = () => {
       setShowOptions(false);
       addMsg("user", label);
 
+      // Track this response
+      stepCounter.current += 1;
+      trackQuizResponse(quiz.id, sessionId.current, currentQuestion.id, optionId, stepCounter.current);
+
       const option = currentQuestion.options.find((o) => o.id === optionId);
       if (!option || !option.next_question_id) {
         setTimeout(() => showEndSequence(), 300);
