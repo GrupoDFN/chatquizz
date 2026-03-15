@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useEffect, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -6,7 +6,6 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
-  addEdge,
   Connection,
   Edge,
   Node,
@@ -16,8 +15,14 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Flag, Plus } from "lucide-react";
+import { Flag, Plus, MessageSquare, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /* ─── Types ─── */
 interface OptionData {
@@ -33,6 +38,7 @@ interface QuestionData {
   is_start_node: boolean;
   pre_messages: string[];
   options: OptionData[];
+  type?: string;
 }
 
 interface FlowEditorProps {
@@ -40,7 +46,7 @@ interface FlowEditorProps {
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string | null) => void;
   onConnectionChange: (optionId: string, nextQuestionId: string | null) => void;
-  onAddQuestion: () => void;
+  onAddCard: (type: "question" | "text") => void;
 }
 
 /* ─── End Node ─── */
@@ -88,7 +94,7 @@ function QuestionNode({ data, selected }: NodeProps) {
 
       {/* Options */}
       <div className="px-3 pb-3 space-y-1">
-        {options.map((opt, i) => (
+        {options.map((opt) => (
           <div key={opt.id} className="relative flex items-center">
             <span className="text-[11px] text-muted-foreground truncate pl-1 pr-6 py-1 rounded bg-secondary/60 w-full block">
               {opt.label}
@@ -107,8 +113,50 @@ function QuestionNode({ data, selected }: NodeProps) {
   );
 }
 
+/* ─── Text Node ─── */
+function TextNode({ data, selected }: NodeProps) {
+  const { label, questionIndex } = data as {
+    label: string;
+    questionIndex: number;
+  };
+
+  return (
+    <div
+      className={`min-w-[220px] max-w-[280px] rounded-2xl border-2 bg-card shadow-md transition-all ${
+        selected ? "border-accent shadow-lg ring-2 ring-accent/20" : "border-border"
+      }`}
+    >
+      <Handle type="target" position={Position.Left} className="!h-3 !w-3 !bg-accent !border-accent/40" />
+
+      <div className="flex items-center gap-2 px-4 pt-3 pb-2">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground">
+          <MessageSquare className="h-3 w-3" />
+        </span>
+        <p className="text-sm font-semibold text-foreground truncate flex-1">{label || "Mensagem"}</p>
+        <span className="shrink-0 rounded-full bg-accent/15 px-2 py-0.5 text-[9px] font-bold text-accent-foreground/70 uppercase tracking-wider">
+          Texto
+        </span>
+      </div>
+
+      <div className="px-3 pb-3">
+        <div className="relative flex items-center">
+          <span className="text-[11px] text-muted-foreground pl-1 py-1">Próximo →</span>
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="text-output"
+            className="!h-2.5 !w-2.5 !bg-accent/70 !border-accent/30 !right-[-5px]"
+            style={{ top: "auto" }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const nodeTypes = {
   question: QuestionNode,
+  text: TextNode,
   end: EndNode,
 };
 
@@ -118,13 +166,13 @@ export default function FlowEditor({
   selectedQuestionId,
   onSelectQuestion,
   onConnectionChange,
-  onAddQuestion,
+  onAddCard,
 }: FlowEditorProps) {
   /* Convert questions to nodes */
   const initialNodes = useMemo(() => {
     const qNodes: Node[] = questions.map((q, i) => ({
       id: q.id,
-      type: "question",
+      type: q.type === "text" ? "text" : "question",
       position: { x: i % 2 === 0 ? 100 : 400, y: i * 200 },
       selected: q.id === selectedQuestionId,
       data: {
@@ -135,7 +183,7 @@ export default function FlowEditor({
       },
     }));
 
-    // Always show the End node so users can freely connect to it
+    // Always show the End node
     qNodes.push({
       id: END_NODE_ID,
       type: "end",
@@ -148,29 +196,39 @@ export default function FlowEditor({
     return qNodes;
   }, [questions, selectedQuestionId]);
 
-  /* Convert options to edges */
+  /* Convert options to edges — only when explicitly connected */
   const initialEdges = useMemo(() => {
     const edges: Edge[] = [];
     questions.forEach((q) => {
-      q.options.forEach((opt) => {
-        const target = opt.next_question_id || END_NODE_ID;
-        edges.push({
-          id: `e-${opt.id}`,
-          source: q.id,
-          sourceHandle: opt.id,
-          target,
-          type: "smoothstep",
-          animated: !opt.next_question_id,
-          style: {
-            stroke: opt.next_question_id ? "hsl(var(--primary))" : "hsl(var(--destructive))",
-            strokeWidth: 2,
-          },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: opt.next_question_id ? "hsl(var(--primary))" : "hsl(var(--destructive))",
-          },
+      if (q.type === "text") {
+        // Text nodes: check if first option has a next_question_id
+        const firstOpt = q.options[0];
+        if (firstOpt?.next_question_id) {
+          edges.push({
+            id: `e-${firstOpt.id}`,
+            source: q.id,
+            sourceHandle: "text-output",
+            target: firstOpt.next_question_id,
+            type: "smoothstep",
+            style: { stroke: "hsl(var(--accent))", strokeWidth: 2 },
+            markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--accent))" },
+          });
+        }
+      } else {
+        q.options.forEach((opt) => {
+          // Only create edge if explicitly connected to something
+          if (!opt.next_question_id) return;
+          edges.push({
+            id: `e-${opt.id}`,
+            source: q.id,
+            sourceHandle: opt.id,
+            target: opt.next_question_id,
+            type: "smoothstep",
+            style: { stroke: "hsl(var(--primary))", strokeWidth: 2 },
+            markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--primary))" },
+          });
         });
-      });
+      }
     });
     return edges;
   }, [questions]);
@@ -178,7 +236,6 @@ export default function FlowEditor({
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Sync when questions change
   useEffect(() => {
     setNodes(initialNodes);
     setEdges(initialEdges);
@@ -188,23 +245,37 @@ export default function FlowEditor({
     (connection: Connection) => {
       if (!connection.sourceHandle || !connection.target) return;
 
-      const optionId = connection.sourceHandle;
+      const handleId = connection.sourceHandle;
       const targetId = connection.target === END_NODE_ID ? null : connection.target;
 
-      onConnectionChange(optionId, targetId);
+      // For text nodes, the handle is "text-output" — find the first option of that question
+      if (handleId === "text-output") {
+        const sourceQ = questions.find((q) => q.id === connection.source);
+        if (sourceQ?.options[0]) {
+          onConnectionChange(sourceQ.options[0].id, targetId);
+        }
+        return;
+      }
+
+      onConnectionChange(handleId, targetId);
     },
-    [onConnectionChange]
+    [onConnectionChange, questions]
   );
 
   const onEdgeDelete = useCallback(
     (deletedEdges: Edge[]) => {
       deletedEdges.forEach((edge) => {
-        if (edge.sourceHandle) {
+        if (edge.sourceHandle === "text-output") {
+          const sourceQ = questions.find((q) => q.id === edge.source);
+          if (sourceQ?.options[0]) {
+            onConnectionChange(sourceQ.options[0].id, null);
+          }
+        } else if (edge.sourceHandle) {
           onConnectionChange(edge.sourceHandle, null);
         }
       });
     },
-    [onConnectionChange]
+    [onConnectionChange, questions]
   );
 
   const onNodeClick = useCallback(
@@ -248,14 +319,30 @@ export default function FlowEditor({
 
       {/* Floating Add Button */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
-        <Button
-          onClick={onAddQuestion}
-          className="rounded-full shadow-lg gap-2 px-5"
-          size="sm"
-        >
-          <Plus className="h-4 w-4" />
-          Adicionar pergunta
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="rounded-full shadow-lg gap-2 px-5" size="sm">
+              <Plus className="h-4 w-4" />
+              Adicionar card
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" side="top" className="mb-2">
+            <DropdownMenuItem onClick={() => onAddCard("question")} className="gap-2 cursor-pointer">
+              <HelpCircle className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-sm font-medium">Card de Pergunta</p>
+                <p className="text-[11px] text-muted-foreground">Com alternativas para o cliente escolher</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAddCard("text")} className="gap-2 cursor-pointer">
+              <MessageSquare className="h-4 w-4 text-accent-foreground" />
+              <div>
+                <p className="text-sm font-medium">Card de Texto</p>
+                <p className="text-[11px] text-muted-foreground">Enviar uma mensagem para a pessoa</p>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

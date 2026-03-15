@@ -159,16 +159,17 @@ export async function uploadAvatar(quizId: string, file: File): Promise<string> 
 }
 
 // Add a question to a quiz
-export async function addQuestion(quizId: string, order: number): Promise<QuestionRow> {
+export async function addQuestion(quizId: string, order: number, type: "question" | "text" = "question"): Promise<QuestionRow> {
   const { data, error } = await supabase
     .from("questions")
-    .insert({ quiz_id: quizId, text: "Nova pergunta", order, is_start_node: false })
+    .insert({ quiz_id: quizId, text: type === "text" ? "Nova mensagem" : "Nova pergunta", order, is_start_node: false, type } as any)
     .select()
     .single();
   if (error) throw error;
 
-  // Add default option
-  await supabase.from("options").insert({ question_id: data.id, label: "Opção A", next_question_id: null });
+  // Add default option (text cards get a single connector option)
+  const label = type === "text" ? "→" : "Opção A";
+  await supabase.from("options").insert({ question_id: data.id, label, next_question_id: null });
 
   return data;
 }

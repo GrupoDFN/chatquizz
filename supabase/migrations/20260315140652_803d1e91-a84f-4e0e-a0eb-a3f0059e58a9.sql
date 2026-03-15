@@ -1,0 +1,1 @@
+ALTER TABLE public.questions ADD COLUMN type text NOT NULL DEFAULT 'question';
