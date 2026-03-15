@@ -1,11 +1,22 @@
-import { Question } from "@/lib/types";
 import { Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface OptionData {
+  id: string;
+  label: string;
+  next_question_id: string | null;
+}
+
+interface QuestionData {
+  id: string;
+  text: string;
+  options: OptionData[];
+}
+
 interface QuestionCardProps {
-  question: Question;
+  question: QuestionData;
   questionIndex: number;
-  allQuestions: Question[];
+  allQuestions: QuestionData[];
   onTextChange: (text: string) => void;
   onOptionLabelChange: (optionId: string, label: string) => void;
   onOptionNextChange: (optionId: string, nextId: string | null) => void;
@@ -29,7 +40,6 @@ const QuestionCard = ({
 }: QuestionCardProps) => {
   return (
     <div className="p-5 animate-fade-in">
-      {/* Header */}
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground tabular-nums">
@@ -42,7 +52,6 @@ const QuestionCard = ({
         </Button>
       </div>
 
-      {/* Question Text */}
       <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Texto da pergunta</label>
       <textarea
         value={question.text}
@@ -52,7 +61,6 @@ const QuestionCard = ({
         className="mb-5 w-full resize-none rounded-inner bg-secondary px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
       />
 
-      {/* Options */}
       <label className="mb-2 block text-xs font-medium text-muted-foreground">Opções de resposta</label>
       <div className="space-y-3">
         {question.options.map((option, optIdx) => (
@@ -81,7 +89,7 @@ const QuestionCard = ({
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">Ir para:</span>
               <select
-                value={option.nextQuestionId || ""}
+                value={option.next_question_id || ""}
                 onChange={(e) => onOptionNextChange(option.id, e.target.value || null)}
                 className="w-full rounded-sm bg-card px-2 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-primary"
               >
@@ -104,7 +112,6 @@ const QuestionCard = ({
         Adicionar opção
       </Button>
 
-      {/* Delete */}
       <div className="mt-6 border-t border-border pt-4">
         <Button
           variant="ghost"
