@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import QuizBuilder from "./pages/QuizBuilder";
 import QuizChat from "./pages/QuizChat";
+import QuizLeads from "./pages/QuizLeads";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
