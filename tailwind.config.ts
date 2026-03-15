@@ -54,6 +54,15 @@ export default {
           bot: "hsl(var(--bubble-bot))",
           user: "hsl(var(--bubble-user))",
         },
+        chat: {
+          bg: "hsl(var(--chat-bg))",
+          header: "hsl(var(--chat-header))",
+          bot: "hsl(var(--chat-bot))",
+          user: "hsl(var(--chat-user))",
+          "user-foreground": "hsl(var(--chat-user-foreground))",
+          option: "hsl(var(--chat-option))",
+          "option-hover": "hsl(var(--chat-option-hover))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
