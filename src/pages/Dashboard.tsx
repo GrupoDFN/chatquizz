@@ -20,6 +20,7 @@ interface QuizRow {
   title: string;
   created_at: string;
   isShared?: boolean;
+  isCopy?: boolean;
   permission?: string;
 }
 
