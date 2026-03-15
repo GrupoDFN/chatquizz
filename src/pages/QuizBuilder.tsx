@@ -292,6 +292,42 @@ const QuizBuilder = () => {
             <div className="p-5 space-y-5">
               <h3 className="text-sm font-medium text-foreground">Tema do Chat</h3>
               <ThemePicker selectedTheme={quiz.theme || "dark-social"} onSelectTheme={handleThemeChange} />
+
+              {/* Delay de resposta */}
+              <div className="border-t border-border pt-4">
+                <h3 className="mb-3 text-sm font-medium text-foreground">Velocidade de Resposta</h3>
+                <p className="text-xs text-muted-foreground mb-3">Controle o tempo que o bot leva para "digitar" cada mensagem.</p>
+                <div className="space-y-2">
+                  {[
+                    { value: 400, label: "Rápido", desc: "0.4s" },
+                    { value: 1000, label: "Normal", desc: "1s" },
+                    { value: 2000, label: "Lento", desc: "2s" },
+                    { value: 3000, label: "Bem lento", desc: "3s" },
+                  ].map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center justify-between rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                        (quiz.response_delay ?? 1000) === opt.value
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="response_delay"
+                          checked={(quiz.response_delay ?? 1000) === opt.value}
+                          onChange={() => handleDelayChange(opt.value)}
+                          className="h-4 w-4 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm text-foreground">{opt.label}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               <div className="border-t border-border pt-4">
                 <h3 className="mb-3 text-sm font-medium text-foreground">Avatar e Verificação</h3>
                 <div className="flex items-center gap-4">
