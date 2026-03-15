@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Link as LinkIcon, Eye, Palette, PartyPopper } from "lucide-react";
+import { ArrowLeft, Plus, Link as LinkIcon, Eye, Palette, PartyPopper, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getQuizFull,
@@ -246,6 +246,10 @@ const QuizBuilder = () => {
             <Button variant="ghost" size="sm" onClick={handleCopyLink}>
               <LinkIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Link</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/leads/${quiz.id}`)}>
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Leads</span>
             </Button>
             <Button size="sm" onClick={() => navigate(`/quiz/${quiz.id}`)}>
               <Eye className="h-4 w-4" />

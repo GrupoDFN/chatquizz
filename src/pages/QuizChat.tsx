@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getQuizFull, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import { trackQuizView, trackQuizResponse } from "@/lib/quiz-tracking";
 import { getThemeById, ChatTheme } from "@/lib/chat-themes";
 import { getEndScreenTemplate } from "@/lib/end-screen-templates";
 import { motion, AnimatePresence } from "framer-motion";
@@ -321,14 +322,27 @@ const QuizChat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const msgCounter = useRef(0);
   const initiated = useRef(false);
+  const stepCounter = useRef(0);
+  const sessionId = useRef<string>("");
 
   const theme = getThemeById(quiz?.theme || "dark-social");
 
   useEffect(() => {
     if (!id) return;
+    // Generate or retrieve session ID
+    const storageKey = `quiz_session_${id}`;
+    let sid = sessionStorage.getItem(storageKey);
+    if (!sid) {
+      sid = crypto.randomUUID().slice(0, 8).toUpperCase();
+      sessionStorage.setItem(storageKey, sid);
+    }
+    sessionId.current = sid;
+
     getQuizFull(id).then((data) => {
-      if (data) setQuiz(data);
-      else setNotFound(true);
+      if (data) {
+        setQuiz(data);
+        trackQuizView(id, sid!);
+      } else setNotFound(true);
     }).catch(() => setNotFound(true));
   }, [id]);
 
@@ -428,6 +442,10 @@ const QuizChat = () => {
       if (!currentQuestion || !quiz) return;
       setShowOptions(false);
       addMsg("user", label);
+
+      // Track this response
+      stepCounter.current += 1;
+      trackQuizResponse(quiz.id, sessionId.current, currentQuestion.id, optionId, stepCounter.current);
 
       const option = currentQuestion.options.find((o) => o.id === optionId);
       if (!option || !option.next_question_id) {

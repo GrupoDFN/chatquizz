@@ -127,6 +127,87 @@ export type Database = {
           },
         ]
       }
+      quiz_responses: {
+        Row: {
+          created_at: string
+          id: string
+          option_id: string | null
+          question_id: string
+          quiz_id: string
+          session_id: string
+          step_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_id?: string | null
+          question_id: string
+          quiz_id: string
+          session_id: string
+          step_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_id?: string | null
+          question_id?: string
+          quiz_id?: string
+          session_id?: string
+          step_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_responses_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_responses_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_views: {
+        Row: {
+          created_at: string
+          id: string
+          quiz_id: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quiz_id: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quiz_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_views_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quizzes: {
         Row: {
           analysis_subtitle: string
