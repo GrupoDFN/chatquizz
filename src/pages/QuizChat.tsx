@@ -360,14 +360,15 @@ const QuizChat = () => {
           <AnimatePresence>
             {messages.map((msg, idx) => {
               if (msg.type === "analysis-card") {
-                return <AnalysisCard key={msg.id} />;
+                return <AnalysisCard key={msg.id} title={quiz.analysis_title || "ANALISANDO"} subtitle={quiz.analysis_subtitle || "Sistema em processamento"} />;
               }
               if (msg.type === "congrats-card") {
                 return (
                   <CongratsCard
                     key={msg.id}
-                    title="Você foi selecionada!"
-                    subtitle="Sua vaga está garantida"
+                    title={quiz.end_screen_title || "Você foi selecionada!"}
+                    subtitle={quiz.end_screen_subtitle || "Sua vaga está garantida"}
+                    templateId={quiz.end_screen_template || "congrats-green"}
                   />
                 );
               }
