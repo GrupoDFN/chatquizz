@@ -14,7 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      options: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          next_question_id: string | null
+          question_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          next_question_id?: string | null
+          question_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          next_question_id?: string | null
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "options_next_question_id_fkey"
+            columns: ["next_question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          created_at: string
+          id: string
+          is_start_node: boolean
+          order: number
+          quiz_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_start_node?: boolean
+          order?: number
+          quiz_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_start_node?: boolean
+          order?: number
+          quiz_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
