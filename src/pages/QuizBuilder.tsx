@@ -98,6 +98,18 @@ const QuizBuilder = () => {
     }
   };
 
+  const handlePreMessagesChange = async (questionId: string, preMessages: string[]) => {
+    setQuiz({
+      ...quiz,
+      questions: quiz.questions.map((q) => (q.id === questionId ? { ...q, pre_messages: preMessages } : q)),
+    });
+    try {
+      await updateQuestionPreMessages(questionId, preMessages);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleOptionLabelChange = async (questionId: string, optionId: string, label: string) => {
     setQuiz({
       ...quiz,
