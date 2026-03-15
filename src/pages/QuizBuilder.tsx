@@ -366,8 +366,10 @@ const QuizBuilder = () => {
                 id: q.id,
                 text: q.text,
                 options: q.options,
+                pre_messages: q.pre_messages,
               }))}
               onTextChange={(text) => handleQuestionTextChange(selectedQuestion.id, text)}
+              onPreMessagesChange={(preMessages) => handlePreMessagesChange(selectedQuestion.id, preMessages)}
               onOptionLabelChange={(optionId, label) => handleOptionLabelChange(selectedQuestion.id, optionId, label)}
               onOptionNextChange={(optionId, nextId) => handleOptionNextChange(selectedQuestion.id, optionId, nextId)}
               onAddOption={() => handleAddOption(selectedQuestion.id)}
