@@ -254,10 +254,23 @@ const QuizBuilder = () => {
               if (id) {
                 setShowThemePicker(false);
                 setShowEndScreenEditor(false);
+                setEndScreenPanel(null);
               }
             }}
             onConnectionChange={handleConnectionChange}
             onAddCard={handleAddCard}
+            onOpenAnalysis={() => {
+              setEndScreenPanel("analysis");
+              setSelectedQuestionId(null);
+              setShowThemePicker(false);
+              setShowEndScreenEditor(false);
+            }}
+            onOpenCongrats={() => {
+              setEndScreenPanel("congrats");
+              setSelectedQuestionId(null);
+              setShowThemePicker(false);
+              setShowEndScreenEditor(false);
+            }}
           />
         </div>
 
