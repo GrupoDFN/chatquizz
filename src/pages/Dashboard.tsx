@@ -34,16 +34,41 @@ const Dashboard = () => {
   const { user, signOut } = useAuth();
 
   const loadQuizzes = useCallback(async () => {
+    if (!user) return;
     try {
       setLoading(true);
-      const data = await getUserQuizzes();
-      setQuizzes(data);
+      // Own quizzes
+      const ownData = await getUserQuizzes();
+      const ownQuizzes: QuizRow[] = ownData.map((q) => ({ ...q, isShared: false }));
+
+      // Shared quizzes (edit mode only — copy mode already duplicated)
+      const { data: shares } = await supabase
+        .from("quiz_shares")
+        .select("quiz_id, permission")
+        .eq("shared_with_user_id", user.id)
+        .eq("permission", "edit");
+
+      let sharedQuizzes: QuizRow[] = [];
+      if (shares && shares.length > 0) {
+        const sharedIds = shares.map((s: any) => s.quiz_id);
+        const { data: sharedData } = await supabase
+          .from("quizzes")
+          .select("id, title, created_at")
+          .in("id", sharedIds);
+        sharedQuizzes = (sharedData ?? []).map((q) => ({
+          ...q,
+          isShared: true,
+          permission: "edit",
+        }));
+      }
+
+      setQuizzes([...ownQuizzes, ...sharedQuizzes]);
     } catch (err: any) {
       toast({ title: "Erro ao carregar quizzes", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadQuizzes();
