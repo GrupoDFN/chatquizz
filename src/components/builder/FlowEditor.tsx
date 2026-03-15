@@ -372,14 +372,18 @@ export default function FlowEditor({
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
+  const SPECIAL_IDS = [END_NODE_ID, ANALYSIS_NODE_ID, CONGRATS_NODE_ID];
+
   const onConnect = useCallback(
     (connection: Connection) => {
       if (!connection.sourceHandle || !connection.target) return;
 
-      const handleId = connection.sourceHandle;
-      const targetId = connection.target === END_NODE_ID ? null : connection.target;
+      // Don't save connections from/to special (non-DB) nodes
+      if (SPECIAL_IDS.includes(connection.source!) || SPECIAL_IDS.includes(connection.target!)) return;
 
-      // For text nodes, the handle is "text-output" — find the first option of that question
+      const handleId = connection.sourceHandle;
+      const targetId = connection.target;
+
       if (handleId === "text-output") {
         const sourceQ = questions.find((q) => q.id === connection.source);
         if (sourceQ?.options[0]) {
