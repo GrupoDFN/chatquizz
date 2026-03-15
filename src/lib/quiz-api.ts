@@ -138,6 +138,59 @@ export async function deleteQuiz(quizId: string): Promise<void> {
   if (error) throw error;
 }
 
+// Duplicate a quiz with all questions and options
+export async function duplicateQuiz(quizId: string, userId: string): Promise<QuizRow> {
+  const full = await getQuizFull(quizId);
+  if (!full) throw new Error("Quiz não encontrado");
+
+  const { data: newQuiz, error: qErr } = await supabase
+    .from("quizzes")
+    .insert({
+      title: `${full.title} (cópia)`,
+      user_id: userId,
+      theme: full.theme,
+      avatar_url: full.avatar_url,
+      show_verified_badge: full.show_verified_badge,
+      end_screen_template: full.end_screen_template,
+      end_screen_title: full.end_screen_title,
+      end_screen_subtitle: full.end_screen_subtitle,
+      analysis_title: full.analysis_title,
+      analysis_subtitle: full.analysis_subtitle,
+      show_analysis_card: full.show_analysis_card,
+      show_congrats_card: full.show_congrats_card,
+      response_delay: full.response_delay,
+    })
+    .select()
+    .single();
+  if (qErr) throw qErr;
+
+  // Map old question IDs to new ones
+  const idMap = new Map<string, string>();
+
+  for (const q of full.questions) {
+    const { data: newQ, error } = await supabase
+      .from("questions")
+      .insert({ quiz_id: newQuiz.id, text: q.text, order: q.order, is_start_node: q.is_start_node, pre_messages: q.pre_messages, type: q.type })
+      .select()
+      .single();
+    if (error) throw error;
+    idMap.set(q.id, newQ.id);
+  }
+
+  // Insert options with mapped IDs
+  for (const q of full.questions) {
+    for (const o of q.options) {
+      await supabase.from("options").insert({
+        question_id: idMap.get(q.id)!,
+        label: o.label,
+        next_question_id: o.next_question_id ? idMap.get(o.next_question_id) ?? null : null,
+      });
+    }
+  }
+
+  return newQuiz;
+}
+
 // Update quiz title
 export async function updateQuizTitle(quizId: string, title: string): Promise<void> {
   const { error } = await supabase.from("quizzes").update({ title }).eq("id", quizId);
