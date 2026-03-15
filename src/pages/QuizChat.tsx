@@ -353,6 +353,8 @@ const QuizChat = () => {
   const showBotMessage = useCallback((question: QuestionWithOptions) => {
     setShowOptions(false);
     const preMessages = question.pre_messages?.filter((m) => m.trim()) || [];
+    const delay = quiz?.response_delay ?? 1000;
+    const jitter = delay * 0.3;
 
     const sendMessagesSequentially = (msgs: string[], index: number, onDone: () => void) => {
       if (index >= msgs.length) {
@@ -363,8 +365,8 @@ const QuizChat = () => {
       setTimeout(() => {
         setIsTyping(false);
         addMsg("bot", msgs[index]);
-        setTimeout(() => sendMessagesSequentially(msgs, index + 1, onDone), 300);
-      }, 600 + Math.random() * 400);
+        setTimeout(() => sendMessagesSequentially(msgs, index + 1, onDone), Math.max(200, delay * 0.3));
+      }, delay + Math.random() * jitter);
     };
 
     sendMessagesSequentially(preMessages, 0, () => {
@@ -374,14 +376,14 @@ const QuizChat = () => {
         addMsg("bot", question.text);
 
         if (question.options.length === 0) {
-          setTimeout(() => showEndSequence(), 800);
+          setTimeout(() => showEndSequence(), delay * 0.8);
         } else {
           setCurrentQuestion(question);
           setTimeout(() => setShowOptions(true), 200);
         }
-      }, 600 + Math.random() * 400);
+      }, delay + Math.random() * jitter);
     });
-  }, [addMsg]);
+  }, [addMsg, quiz]);
 
   const showEndSequence = useCallback(() => {
     const showAnalysis = quiz?.show_analysis_card ?? true;

@@ -95,8 +95,19 @@ const QuizBuilder = () => {
     try { await updateQuizVerifiedBadge(quiz.id, newVal); }
     catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
+  const handleDelayChange = async (delay: number) => {
+    setQuiz({ ...quiz, response_delay: delay });
+    try {
+      const { error } = await (await import("@/integrations/supabase/client")).supabase
+        .from("quizzes")
+        .update({ response_delay: delay } as any)
+        .eq("id", quiz.id);
+      if (error) throw error;
+      toast({ title: "✓ Salvo!" });
+    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
+  };
 
-  const handleEndScreenChange = async (key: string, value: string | boolean) => {
+
     setQuiz({ ...quiz, [key]: value } as any);
     try {
       await updateQuizEndScreen(quiz.id, { [key]: value } as any);
