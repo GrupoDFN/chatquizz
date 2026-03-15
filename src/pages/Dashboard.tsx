@@ -30,6 +30,7 @@ const Dashboard = () => {
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
   const [shareQuiz, setShareQuiz] = useState<{ id: string; title: string } | null>(null);
+  const fulfillingRef = useRef(false);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
@@ -38,24 +39,30 @@ const Dashboard = () => {
     try {
       setLoading(true);
 
-      // Fulfill pending copy shares (recipient duplicates as themselves)
-      const { data: pendingCopies } = await (supabase
-        .from("quiz_shares")
-        .select("id, quiz_id")
-        .eq("shared_with_user_id", user.id)
-        .eq("permission", "copy") as any)
-        .eq("fulfilled", false);
+      // Fulfill pending copy shares — use a ref guard to prevent concurrent runs
+      if (!fulfillingRef.current) {
+        fulfillingRef.current = true;
+        try {
+          const { data: pendingCopies } = await (supabase
+            .from("quiz_shares")
+            .select("id, quiz_id")
+            .eq("shared_with_user_id", user.id)
+            .eq("permission", "copy") as any)
+            .eq("fulfilled", false);
 
-      if (pendingCopies && pendingCopies.length > 0) {
-        for (const share of pendingCopies) {
-          try {
-            await duplicateQuiz(share.quiz_id, user.id);
-            // Delete the share after fulfillment to prevent re-duplication
-            await supabase.from("quiz_shares").delete().eq("id", share.id);
-          } catch {
-            // If duplication fails, still mark as fulfilled to prevent infinite loop
-            await supabase.from("quiz_shares").delete().eq("id", share.id);
+          if (pendingCopies && pendingCopies.length > 0) {
+            for (const share of pendingCopies) {
+              // Delete FIRST to prevent re-processing on concurrent loads
+              await supabase.from("quiz_shares").delete().eq("id", share.id);
+              try {
+                await duplicateQuiz(share.quiz_id, user.id);
+              } catch {
+                // Duplication failed but share is already deleted — no infinite loop
+              }
+            }
           }
+        } finally {
+          fulfillingRef.current = false;
         }
       }
 
