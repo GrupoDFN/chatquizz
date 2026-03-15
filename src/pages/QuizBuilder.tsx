@@ -234,9 +234,13 @@ const QuizBuilder = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setShowThemePicker(!showThemePicker)}>
+            <Button variant="ghost" size="sm" onClick={() => { setShowThemePicker(!showThemePicker); setShowEndScreenEditor(false); }}>
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Tema</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setShowEndScreenEditor(!showEndScreenEditor); setShowThemePicker(false); }}>
+              <PartyPopper className="h-4 w-4" />
+              <span className="hidden sm:inline">Tela Final</span>
             </Button>
             <Button variant="ghost" size="sm" onClick={handleCopyLink}>
               <LinkIcon className="h-4 w-4" />
