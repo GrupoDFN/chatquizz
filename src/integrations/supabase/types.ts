@@ -62,6 +62,7 @@ export type Database = {
           pre_messages: string[]
           quiz_id: string
           text: string
+          type: string
         }
         Insert: {
           created_at?: string
@@ -71,6 +72,7 @@ export type Database = {
           pre_messages?: string[]
           quiz_id: string
           text: string
+          type?: string
         }
         Update: {
           created_at?: string
@@ -80,6 +82,7 @@ export type Database = {
           pre_messages?: string[]
           quiz_id?: string
           text?: string
+          type?: string
         }
         Relationships: [
           {
