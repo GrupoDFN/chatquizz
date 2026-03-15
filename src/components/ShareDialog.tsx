@@ -89,11 +89,11 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
       return;
     }
 
-    // Look up user
+    // Look up user (case-insensitive)
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("id, email")
-      .eq("email", trimmedEmail)
+      .ilike("email", trimmedEmail)
       .maybeSingle();
 
     if (error || !profile) {
