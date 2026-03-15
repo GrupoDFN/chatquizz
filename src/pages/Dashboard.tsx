@@ -201,7 +201,7 @@ const Dashboard = () => {
                         <Copy className="mr-2 h-4 w-4" />
                         Duplicar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleCopyLink(quiz.id)}>
+                      <DropdownMenuItem onClick={() => setShareQuiz({ id: quiz.id, title: quiz.title })}>
                         <Share2 className="mr-2 h-4 w-4" />
                         Compartilhar
                       </DropdownMenuItem>
