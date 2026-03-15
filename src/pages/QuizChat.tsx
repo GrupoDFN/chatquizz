@@ -267,33 +267,42 @@ const QuizChat = () => {
   }, [addMsg]);
 
   const showEndSequence = useCallback(() => {
-    // 1. Typing then "Perfeito!" message
+    const showAnalysis = quiz?.show_analysis_card ?? true;
+    const showCongrats = quiz?.show_congrats_card ?? true;
+
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
       addMsg("bot", "Perfeito! ✅");
 
-      // 2. Typing then "analyzing" message
-      setTimeout(() => {
-        setIsTyping(true);
+      if (showAnalysis) {
         setTimeout(() => {
-          setIsTyping(false);
-          addMsg("bot", "Estamos analisando suas respostas aqui, aguarde alguns segundos… 🔍");
-
-          // 3. Show analysis card after a beat
+          setIsTyping(true);
           setTimeout(() => {
-            addMsg("analysis-card", "");
-
-            // 4. After analysis completes (~3s), show congrats
+            setIsTyping(false);
+            addMsg("bot", "Estamos analisando suas respostas aqui, aguarde alguns segundos… 🔍");
             setTimeout(() => {
-              addMsg("congrats-card", "");
-              setIsFinished(true);
-            }, 3200);
-          }, 800);
-        }, 700);
-      }, 400);
+              addMsg("analysis-card", "");
+              setTimeout(() => {
+                if (showCongrats) addMsg("congrats-card", "");
+                setIsFinished(true);
+              }, 3200);
+            }, 800);
+          }, 700);
+        }, 400);
+      } else if (showCongrats) {
+        setTimeout(() => {
+          addMsg("congrats-card", "");
+          setIsFinished(true);
+        }, 600);
+      } else {
+        setTimeout(() => {
+          addMsg("bot", "Obrigado por responder! 🎉");
+          setIsFinished(true);
+        }, 400);
+      }
     }, 600);
-  }, [addMsg]);
+  }, [addMsg, quiz]);
 
   const handleOptionSelect = useCallback(
     (optionId: string, label: string) => {
