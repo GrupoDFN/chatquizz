@@ -210,8 +210,8 @@ export default function FlowEditor({
             sourceHandle: "text-output",
             target: firstOpt.next_question_id,
             type: "smoothstep",
-            style: { stroke: "hsl(var(--accent))", strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--accent))" },
+            style: { stroke: "hsl(var(--primary))", strokeWidth: 2, strokeDasharray: "4 3" },
+            markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--primary))" },
           });
         }
       } else {
