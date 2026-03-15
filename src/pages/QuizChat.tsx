@@ -150,49 +150,161 @@ const AnalysisCard = ({ title, subtitle }: { title: string; subtitle: string }) 
 /* ── Congratulations Card ── */
 const CongratsCard = ({ title, subtitle, templateId }: { title: string; subtitle: string; templateId: string }) => {
   const tmpl = getEndScreenTemplate(templateId);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowConfetti(true), 400);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
-      className="mx-auto w-full max-w-[340px]"
+      initial={{ opacity: 0, scale: 0.6, y: 40, rotateX: 15 }}
+      animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="mx-auto w-full max-w-[340px] perspective-[800px]"
     >
-      <div className={`relative rounded-2xl p-6 shadow-xl border overflow-hidden ${tmpl.styles.cardBg} ${tmpl.styles.cardBorder}`}>
-        <div className={`absolute top-3 left-3 ${tmpl.styles.accentColor}`}><Star className="h-5 w-5" /></div>
-        <div className={`absolute top-3 right-3 ${tmpl.styles.decorColor}`}><Sparkles className="h-5 w-5" /></div>
+      <motion.div
+        className={`relative rounded-2xl p-6 shadow-xl border overflow-hidden ${tmpl.styles.cardBg} ${tmpl.styles.cardBorder}`}
+        animate={{ boxShadow: ["0 0 0px rgba(59,130,246,0)", "0 0 30px rgba(59,130,246,0.3)", "0 0 0px rgba(59,130,246,0)"] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+      >
+        {/* Floating particles */}
+        {showConfetti && (
+          <>
+            {["🎊", "✨", "⭐", "🎉", "💫", "🌟"].map((emoji, i) => (
+              <motion.span
+                key={i}
+                className="absolute text-sm pointer-events-none"
+                initial={{
+                  opacity: 0,
+                  x: 140 + (i % 2 === 0 ? -20 : 20),
+                  y: 120,
+                  scale: 0,
+                }}
+                animate={{
+                  opacity: [0, 1, 1, 0],
+                  x: 140 + Math.cos((i / 6) * Math.PI * 2) * 120,
+                  y: -20 + Math.sin((i / 6) * Math.PI * 2) * 30,
+                  scale: [0, 1.2, 1, 0.5],
+                  rotate: [0, i % 2 === 0 ? 180 : -180],
+                }}
+                transition={{
+                  duration: 1.8,
+                  delay: 0.1 * i,
+                  ease: "easeOut",
+                }}
+              >
+                {emoji}
+              </motion.span>
+            ))}
+          </>
+        )}
 
+        {/* Corner decorations */}
+        <motion.div
+          className={`absolute top-3 left-3 ${tmpl.styles.accentColor}`}
+          animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <Star className="h-5 w-5" />
+        </motion.div>
+        <motion.div
+          className={`absolute top-3 right-3 ${tmpl.styles.decorColor}`}
+          animate={{ rotate: [0, -20, 20, 0], scale: [1, 1.3, 0.9, 1] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        >
+          <Sparkles className="h-5 w-5" />
+        </motion.div>
+
+        {/* Icon section */}
         <div className="flex flex-col items-center mb-4">
-          <Crown className={`h-8 w-8 ${tmpl.styles.accentColor} mb-1`} />
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Crown className={`h-8 w-8 ${tmpl.styles.accentColor} mb-1`} />
+          </motion.div>
           <div className="relative">
-            <div className={`h-14 w-14 rounded-full flex items-center justify-center shadow-lg ${tmpl.styles.iconBg}`}>
+            <motion.div
+              className={`h-14 w-14 rounded-full flex items-center justify-center shadow-lg ${tmpl.styles.iconBg}`}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.3, duration: 0.6, type: "spring", stiffness: 200 }}
+            >
               <CheckCircle2 className={`h-8 w-8 ${tmpl.styles.iconColor}`} />
-            </div>
+            </motion.div>
             <motion.span
               className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-yellow-400 flex items-center justify-center text-[10px]"
-              animate={{ rotate: [0, 15, -15, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              initial={{ scale: 0 }}
+              animate={{ scale: [0, 1.4, 1], rotate: [0, 20, -20, 0] }}
+              transition={{ delay: 0.6, duration: 0.5, type: "spring" }}
             >
               ⭐
             </motion.span>
           </div>
         </div>
 
+        {/* Text content */}
         <div className="text-center space-y-2">
-          <p className={`text-2xl font-extrabold ${tmpl.styles.titleColor}`}>🎉 PARABÉNS! 🎉</p>
-          <p className={`text-lg font-bold ${tmpl.styles.titleColor}`}>{title}</p>
-          <p className={`text-sm ${tmpl.styles.subtitleColor}`}>{subtitle} ✨</p>
+          <motion.p
+            className={`text-2xl font-extrabold ${tmpl.styles.titleColor}`}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: [0.5, 1.1, 1] }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            🎉 PARABÉNS! 🎉
+          </motion.p>
+          <motion.p
+            className={`text-lg font-bold ${tmpl.styles.titleColor}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.4 }}
+          >
+            {title}
+          </motion.p>
+          <motion.p
+            className={`text-sm ${tmpl.styles.subtitleColor}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.4 }}
+          >
+            {subtitle} ✨
+          </motion.p>
         </div>
 
-        <div className="flex items-center justify-between mt-5 px-2">
-          <Sparkles className={`h-4 w-4 ${tmpl.styles.decorColor}`} />
+        {/* Bottom decoration */}
+        <motion.div
+          className="flex items-center justify-between mt-5 px-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.4 }}
+        >
+          <motion.div
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+          >
+            <Sparkles className={`h-4 w-4 ${tmpl.styles.decorColor}`} />
+          </motion.div>
           <div className="flex items-center gap-2">
-            <div className="h-1.5 w-8 rounded-full bg-white/10" />
-            <div className="h-2 w-2 rounded-full bg-white/20" />
-            <div className="h-1.5 w-8 rounded-full bg-white/10" />
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="h-1.5 w-6 rounded-full bg-white/10"
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.5, delay: i * 0.3, repeat: Infinity }}
+              />
+            ))}
           </div>
-          <span className="text-sm">🎊</span>
-        </div>
-      </div>
+          <motion.span
+            className="text-sm"
+            animate={{ scale: [1, 1.3, 1], rotate: [0, 15, -15, 0] }}
+            transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+          >
+            🎊
+          </motion.span>
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
 };
