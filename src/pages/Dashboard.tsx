@@ -110,11 +110,16 @@ const Dashboard = () => {
     }
   };
 
-  const handleDelete = async (id: string, title: string) => {
+  const handleDelete = async (id: string, title: string, isShared?: boolean) => {
     try {
-      await deleteQuiz(id);
+      if (isShared && user) {
+        // Remove the share entry, not the quiz itself
+        await supabase.from("quiz_shares").delete().eq("quiz_id", id).eq("shared_with_user_id", user.id);
+      } else {
+        await deleteQuiz(id);
+      }
       setQuizzes((prev) => prev.filter((q) => q.id !== id));
-      toast({ title: "Quiz excluído", description: `"${title}" foi removido.` });
+      toast({ title: isShared ? "Quiz removido do seu painel" : "Quiz excluído", description: `"${title}" foi removido.` });
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
