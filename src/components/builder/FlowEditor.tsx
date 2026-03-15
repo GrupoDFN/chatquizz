@@ -215,6 +215,8 @@ const nodeTypes = {
   question: QuestionNode,
   text: TextNode,
   end: EndNode,
+  analysis: AnalysisNode,
+  congrats: CongratsNode,
 };
 
 /* ─── Main Component ─── */
