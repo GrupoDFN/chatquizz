@@ -7,6 +7,13 @@ export interface QuizRow {
   theme: string;
   avatar_url: string | null;
   show_verified_badge: boolean;
+  end_screen_template: string;
+  end_screen_title: string;
+  end_screen_subtitle: string;
+  analysis_title: string;
+  analysis_subtitle: string;
+  show_analysis_card: boolean;
+  show_congrats_card: boolean;
   created_at: string;
 }
 
