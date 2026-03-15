@@ -24,6 +24,7 @@ import ThemePicker from "@/components/builder/ThemePicker";
 import QuestionCard from "@/components/builder/QuestionCard";
 import EndScreenEditor from "@/components/builder/EndScreenEditor";
 import FlowEditor from "@/components/builder/FlowEditor";
+import TextCard from "@/components/builder/TextCard";
 
 const QuizBuilder = () => {
   const { id } = useParams<{ id: string }>();
