@@ -329,9 +329,20 @@ const QuizChat = () => {
 
   useEffect(() => {
     if (!id) return;
+    // Generate or retrieve session ID
+    const storageKey = `quiz_session_${id}`;
+    let sid = sessionStorage.getItem(storageKey);
+    if (!sid) {
+      sid = crypto.randomUUID().slice(0, 8).toUpperCase();
+      sessionStorage.setItem(storageKey, sid);
+    }
+    sessionId.current = sid;
+
     getQuizFull(id).then((data) => {
-      if (data) setQuiz(data);
-      else setNotFound(true);
+      if (data) {
+        setQuiz(data);
+        trackQuizView(id, sid!);
+      } else setNotFound(true);
     }).catch(() => setNotFound(true));
   }, [id]);
 
