@@ -11,12 +11,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserQuizzes, createQuiz, deleteQuiz, duplicateQuiz } from "@/lib/quiz-api";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import ShareDialog from "@/components/ShareDialog";
 
 interface QuizRow {
   id: string;
   title: string;
   created_at: string;
+  isShared?: boolean;
+  permission?: string;
 }
 
 const Dashboard = () => {
@@ -25,20 +29,46 @@ const Dashboard = () => {
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
+  const [shareQuiz, setShareQuiz] = useState<{ id: string; title: string } | null>(null);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
   const loadQuizzes = useCallback(async () => {
+    if (!user) return;
     try {
       setLoading(true);
-      const data = await getUserQuizzes();
-      setQuizzes(data);
+      // Own quizzes
+      const ownData = await getUserQuizzes();
+      const ownQuizzes: QuizRow[] = ownData.map((q) => ({ ...q, isShared: false }));
+
+      // Shared quizzes (edit mode only — copy mode already duplicated)
+      const { data: shares } = await supabase
+        .from("quiz_shares")
+        .select("quiz_id, permission")
+        .eq("shared_with_user_id", user.id)
+        .eq("permission", "edit");
+
+      let sharedQuizzes: QuizRow[] = [];
+      if (shares && shares.length > 0) {
+        const sharedIds = shares.map((s: any) => s.quiz_id);
+        const { data: sharedData } = await supabase
+          .from("quizzes")
+          .select("id, title, created_at")
+          .in("id", sharedIds);
+        sharedQuizzes = (sharedData ?? []).map((q) => ({
+          ...q,
+          isShared: true,
+          permission: "edit",
+        }));
+      }
+
+      setQuizzes([...ownQuizzes, ...sharedQuizzes]);
     } catch (err: any) {
       toast({ title: "Erro ao carregar quizzes", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadQuizzes();
@@ -141,9 +171,16 @@ const Dashboard = () => {
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
                     <h3 className="text-base font-medium text-foreground truncate">{quiz.title}</h3>
-                    <p className="mt-1 text-xs tabular-nums text-muted-foreground">
-                      {new Date(quiz.created_at).toLocaleDateString("pt-BR")}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs tabular-nums text-muted-foreground">
+                        {new Date(quiz.created_at).toLocaleDateString("pt-BR")}
+                      </p>
+                      {quiz.isShared && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          Compartilhado
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -164,7 +201,7 @@ const Dashboard = () => {
                         <Copy className="mr-2 h-4 w-4" />
                         Duplicar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleCopyLink(quiz.id)}>
+                      <DropdownMenuItem onClick={() => setShareQuiz({ id: quiz.id, title: quiz.title })}>
                         <Share2 className="mr-2 h-4 w-4" />
                         Compartilhar
                       </DropdownMenuItem>
@@ -214,6 +251,14 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Share Dialog */}
+      <ShareDialog
+        quizId={shareQuiz?.id ?? ""}
+        quizTitle={shareQuiz?.title ?? ""}
+        open={!!shareQuiz}
+        onClose={() => setShareQuiz(null)}
+      />
     </div>
   );
 };
