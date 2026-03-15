@@ -37,11 +37,31 @@ const Dashboard = () => {
     if (!user) return;
     try {
       setLoading(true);
-      // Own quizzes
+
+      // Fulfill pending copy shares (recipient duplicates as themselves)
+      const { data: pendingCopies } = await supabase
+        .from("quiz_shares")
+        .select("id, quiz_id")
+        .eq("shared_with_user_id", user.id)
+        .eq("permission", "copy")
+        .eq("fulfilled", false);
+
+      if (pendingCopies && pendingCopies.length > 0) {
+        for (const share of pendingCopies) {
+          try {
+            await duplicateQuiz(share.quiz_id, user.id);
+            await supabase.from("quiz_shares").update({ fulfilled: true } as any).eq("id", share.id);
+          } catch {
+            // skip failed duplications silently
+          }
+        }
+      }
+
+      // Own quizzes (includes newly duplicated ones)
       const ownData = await getUserQuizzes();
       const ownQuizzes: QuizRow[] = ownData.map((q) => ({ ...q, isShared: false }));
 
-      // Shared quizzes (edit mode only — copy mode already duplicated)
+      // Shared quizzes (edit mode only)
       const { data: shares } = await supabase
         .from("quiz_shares")
         .select("quiz_id, permission")
