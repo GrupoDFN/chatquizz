@@ -24,6 +24,7 @@ export interface QuestionRow {
   order: number;
   is_start_node: boolean;
   pre_messages: string[];
+  type: string;
   created_at: string;
 }
 
