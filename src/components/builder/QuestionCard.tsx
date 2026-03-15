@@ -1,4 +1,4 @@
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface OptionData {
@@ -11,6 +11,7 @@ interface QuestionData {
   id: string;
   text: string;
   options: OptionData[];
+  pre_messages?: string[];
 }
 
 interface QuestionCardProps {
@@ -18,6 +19,7 @@ interface QuestionCardProps {
   questionIndex: number;
   allQuestions: QuestionData[];
   onTextChange: (text: string) => void;
+  onPreMessagesChange: (preMessages: string[]) => void;
   onOptionLabelChange: (optionId: string, label: string) => void;
   onOptionNextChange: (optionId: string, nextId: string | null) => void;
   onAddOption: () => void;
@@ -31,6 +33,7 @@ const QuestionCard = ({
   questionIndex,
   allQuestions,
   onTextChange,
+  onPreMessagesChange,
   onOptionLabelChange,
   onOptionNextChange,
   onAddOption,
@@ -38,6 +41,22 @@ const QuestionCard = ({
   onDeleteQuestion,
   onClose,
 }: QuestionCardProps) => {
+  const preMessages = question.pre_messages || [];
+
+  const handleAddPreMessage = () => {
+    onPreMessagesChange([...preMessages, ""]);
+  };
+
+  const handleUpdatePreMessage = (index: number, value: string) => {
+    const updated = [...preMessages];
+    updated[index] = value;
+    onPreMessagesChange(updated);
+  };
+
+  const handleDeletePreMessage = (index: number) => {
+    onPreMessagesChange(preMessages.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="p-5 animate-fade-in">
       <div className="mb-5 flex items-center justify-between">
@@ -50,6 +69,49 @@ const QuestionCard = ({
         <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">
           <X className="h-4 w-4" />
         </Button>
+      </div>
+
+      {/* Pre-messages */}
+      <div className="mb-5">
+        <div className="mb-2 flex items-center justify-between">
+          <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <MessageSquare className="h-3.5 w-3.5" />
+            Mensagens antes da pergunta
+          </label>
+          <Button variant="ghost" size="sm" onClick={handleAddPreMessage} className="h-6 px-2 text-[10px] text-muted-foreground">
+            <Plus className="h-3 w-3" />
+            Adicionar
+          </Button>
+        </div>
+        {preMessages.length > 0 && (
+          <div className="space-y-2">
+            {preMessages.map((msg, idx) => (
+              <div key={idx} className="flex items-start gap-2">
+                <span className="mt-2.5 text-[10px] font-medium text-muted-foreground shrink-0">{idx + 1}.</span>
+                <input
+                  type="text"
+                  value={msg}
+                  onChange={(e) => handleUpdatePreMessage(idx, e.target.value)}
+                  placeholder="Digite uma mensagem..."
+                  className="flex-1 rounded-inner bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeletePreMessage(idx)}
+                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+        {preMessages.length === 0 && (
+          <p className="text-[11px] text-muted-foreground/60 italic">
+            Nenhuma mensagem prévia. Adicione frases que o bot enviará antes desta pergunta.
+          </p>
+        )}
       </div>
 
       <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Texto da pergunta</label>
