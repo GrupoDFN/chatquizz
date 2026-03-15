@@ -244,13 +244,7 @@ const QuizBuilder = () => {
 
                 {qIndex < quiz.questions.length - 1 && (
                   <FlowConnections
-                    question={{
-                      ...question,
-                      options: question.options.map((o) => ({
-                        ...o,
-                        nextQuestionId: o.next_question_id,
-                      })),
-                    }}
+                    question={question}
                     allQuestions={quiz.questions}
                     currentIndex={qIndex}
                   />
