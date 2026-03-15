@@ -17,6 +17,7 @@ interface EndScreenConfig {
 interface EndScreenEditorProps {
   config: EndScreenConfig;
   onChange: (key: keyof EndScreenConfig, value: string | boolean) => void;
+  showOnly?: "template";
 }
 
 const MiniCongratsPreview = ({ template }: { template: EndScreenTemplate }) => (
