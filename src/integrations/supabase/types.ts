@@ -90,22 +90,28 @@ export type Database = {
       }
       quizzes: {
         Row: {
+          avatar_url: string | null
           created_at: string
           id: string
+          show_verified_badge: boolean
           theme: string
           title: string
           user_id: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           id?: string
+          show_verified_badge?: boolean
           theme?: string
           title: string
           user_id: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           id?: string
+          show_verified_badge?: boolean
           theme?: string
           title?: string
           user_id?: string
