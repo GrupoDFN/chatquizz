@@ -20,6 +20,7 @@ interface QuizRow {
   title: string;
   created_at: string;
   isShared?: boolean;
+  isCopy?: boolean;
   permission?: string;
 }
 
@@ -55,7 +56,7 @@ const Dashboard = () => {
               // Delete FIRST to prevent re-processing on concurrent loads
               await supabase.from("quiz_shares").delete().eq("id", share.id);
               try {
-                await duplicateQuiz(share.quiz_id, user.id);
+                await duplicateQuiz(share.quiz_id, user.id, true);
               } catch {
                 // Duplication failed but share is already deleted — no infinite loop
               }
@@ -68,7 +69,11 @@ const Dashboard = () => {
 
       // Own quizzes (includes newly duplicated ones)
       const ownData = await getUserQuizzes();
-      const ownQuizzes: QuizRow[] = ownData.map((q) => ({ ...q, isShared: false }));
+      const ownQuizzes: QuizRow[] = ownData.map((q: any) => ({
+        ...q,
+        isShared: false,
+        isCopy: q.is_copy === true,
+      }));
 
       // Shared quizzes (edit mode only)
       const { data: shares } = await supabase
@@ -223,7 +228,7 @@ const Dashboard = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      {!quiz.isShared && (
+                      {!quiz.isCopy && (
                         <DropdownMenuItem onClick={() => navigate(`/builder/${quiz.id}`)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Editar
@@ -233,7 +238,7 @@ const Dashboard = () => {
                         <Eye className="mr-2 h-4 w-4" />
                         Visualizar
                       </DropdownMenuItem>
-                      {!quiz.isShared && (
+                      {!quiz.isCopy && (
                         <>
                           <DropdownMenuItem onClick={() => handleDuplicate(quiz.id)}>
                             <Copy className="mr-2 h-4 w-4" />

@@ -139,7 +139,7 @@ export async function deleteQuiz(quizId: string): Promise<void> {
 }
 
 // Duplicate a quiz with all questions and options
-export async function duplicateQuiz(quizId: string, userId: string): Promise<QuizRow> {
+export async function duplicateQuiz(quizId: string, userId: string, markAsCopy = false): Promise<QuizRow> {
   const full = await getQuizFull(quizId);
   if (!full) throw new Error("Quiz não encontrado");
 
@@ -159,6 +159,7 @@ export async function duplicateQuiz(quizId: string, userId: string): Promise<Qui
       show_analysis_card: full.show_analysis_card,
       show_congrats_card: full.show_congrats_card,
       response_delay: full.response_delay,
+      ...(markAsCopy ? { is_copy: true } as any : {}),
     })
     .select()
     .single();
