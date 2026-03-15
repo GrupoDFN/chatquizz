@@ -569,7 +569,7 @@ const QuizChat = () => {
       {/* Footer */}
       <footer className={`border-t px-4 py-3 text-center ${theme.styles.footerBg} ${theme.styles.borderColor}`}>
         <p className={`text-[11px] ${theme.styles.footerText}`}>
-          Powered by <span className={`font-medium ${theme.styles.footerAccent}`}>ChatQuiz</span>
+          Powered by <span className={`font-medium ${theme.styles.footerAccent}`}>ChatFunnel</span>
         </p>
       </footer>
     </div>
