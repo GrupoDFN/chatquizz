@@ -1,0 +1,1 @@
+ALTER TABLE public.quizzes ADD COLUMN response_delay integer NOT NULL DEFAULT 1000;

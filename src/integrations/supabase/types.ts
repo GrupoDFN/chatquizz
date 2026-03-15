@@ -104,6 +104,7 @@ export type Database = {
           end_screen_template: string
           end_screen_title: string
           id: string
+          response_delay: number
           show_analysis_card: boolean
           show_congrats_card: boolean
           show_verified_badge: boolean
@@ -120,6 +121,7 @@ export type Database = {
           end_screen_template?: string
           end_screen_title?: string
           id?: string
+          response_delay?: number
           show_analysis_card?: boolean
           show_congrats_card?: boolean
           show_verified_badge?: boolean
@@ -136,6 +138,7 @@ export type Database = {
           end_screen_template?: string
           end_screen_title?: string
           id?: string
+          response_delay?: number
           show_analysis_card?: boolean
           show_congrats_card?: boolean
           show_verified_badge?: boolean
