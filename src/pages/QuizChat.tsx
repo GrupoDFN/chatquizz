@@ -148,57 +148,54 @@ const AnalysisCard = ({ title, subtitle }: { title: string; subtitle: string }) 
 };
 
 /* ── Congratulations Card ── */
-const CongratsCard = ({ title, subtitle }: { title: string; subtitle: string }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-    animate={{ opacity: 1, scale: 1, y: 0 }}
-    transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
-    className="mx-auto w-full max-w-[340px]"
-  >
-    <div className="relative rounded-2xl bg-gradient-to-b from-[#0a2e1a] to-[#0d3520] p-6 shadow-xl border border-emerald-500/30 overflow-hidden">
-      {/* Decorative corners */}
-      <div className="absolute top-3 left-3 text-yellow-400/70"><Star className="h-5 w-5" /></div>
-      <div className="absolute top-3 right-3 text-emerald-300/50"><Sparkles className="h-5 w-5" /></div>
+const CongratsCard = ({ title, subtitle, templateId }: { title: string; subtitle: string; templateId: string }) => {
+  const tmpl = getEndScreenTemplate(templateId);
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
+      className="mx-auto w-full max-w-[340px]"
+    >
+      <div className={`relative rounded-2xl p-6 shadow-xl border overflow-hidden ${tmpl.styles.cardBg} ${tmpl.styles.cardBorder}`}>
+        <div className={`absolute top-3 left-3 ${tmpl.styles.accentColor}`}><Star className="h-5 w-5" /></div>
+        <div className={`absolute top-3 right-3 ${tmpl.styles.decorColor}`}><Sparkles className="h-5 w-5" /></div>
 
-      {/* Crown + Check */}
-      <div className="flex flex-col items-center mb-4">
-        <Crown className="h-8 w-8 text-yellow-400 mb-1" />
-        <div className="relative">
-          <div className="h-14 w-14 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-            <CheckCircle2 className="h-8 w-8 text-white" />
+        <div className="flex flex-col items-center mb-4">
+          <Crown className={`h-8 w-8 ${tmpl.styles.accentColor} mb-1`} />
+          <div className="relative">
+            <div className={`h-14 w-14 rounded-full flex items-center justify-center shadow-lg ${tmpl.styles.iconBg}`}>
+              <CheckCircle2 className={`h-8 w-8 ${tmpl.styles.iconColor}`} />
+            </div>
+            <motion.span
+              className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-yellow-400 flex items-center justify-center text-[10px]"
+              animate={{ rotate: [0, 15, -15, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              ⭐
+            </motion.span>
           </div>
-          <motion.span
-            className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-yellow-400 flex items-center justify-center text-[10px]"
-            animate={{ rotate: [0, 15, -15, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            ⭐
-          </motion.span>
+        </div>
+
+        <div className="text-center space-y-2">
+          <p className={`text-2xl font-extrabold ${tmpl.styles.titleColor}`}>🎉 PARABÉNS! 🎉</p>
+          <p className={`text-lg font-bold ${tmpl.styles.titleColor}`}>{title}</p>
+          <p className={`text-sm ${tmpl.styles.subtitleColor}`}>{subtitle} ✨</p>
+        </div>
+
+        <div className="flex items-center justify-between mt-5 px-2">
+          <Sparkles className={`h-4 w-4 ${tmpl.styles.decorColor}`} />
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-8 rounded-full bg-white/10" />
+            <div className="h-2 w-2 rounded-full bg-white/20" />
+            <div className="h-1.5 w-8 rounded-full bg-white/10" />
+          </div>
+          <span className="text-sm">🎊</span>
         </div>
       </div>
-
-      {/* Text */}
-      <div className="text-center space-y-2">
-        <p className="text-2xl font-extrabold text-white">
-          🎉 PARABÉNS! 🎉
-        </p>
-        <p className="text-lg font-bold text-white">{title}</p>
-        <p className="text-sm text-emerald-300">{subtitle} ✨</p>
-      </div>
-
-      {/* Bottom decorative */}
-      <div className="flex items-center justify-between mt-5 px-2">
-        <Sparkles className="h-4 w-4 text-emerald-400/40" />
-        <div className="flex items-center gap-2">
-          <div className="h-1.5 w-8 rounded-full bg-white/10" />
-          <div className="h-2 w-2 rounded-full bg-emerald-400/50" />
-          <div className="h-1.5 w-8 rounded-full bg-white/10" />
-        </div>
-        <span className="text-sm">🎊</span>
-      </div>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 const QuizChat = () => {
   const { id } = useParams<{ id: string }>();
