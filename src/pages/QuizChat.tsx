@@ -107,14 +107,33 @@ const QuizChat = () => {
 
   const showBotMessage = useCallback((question: QuestionWithOptions) => {
     setShowOptions(false);
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      msgCounter.current += 1;
-      setMessages((prev) => [...prev, { id: `msg-${msgCounter.current}`, type: "bot", text: question.text }]);
-      setCurrentQuestion(question);
-      setTimeout(() => setShowOptions(true), 200);
-    }, 800 + Math.random() * 400);
+    const preMessages = question.pre_messages?.filter((m) => m.trim()) || [];
+    
+    const sendMessagesSequentially = (msgs: string[], index: number, onDone: () => void) => {
+      if (index >= msgs.length) {
+        onDone();
+        return;
+      }
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+        msgCounter.current += 1;
+        setMessages((prev) => [...prev, { id: `msg-${msgCounter.current}`, type: "bot", text: msgs[index] }]);
+        setTimeout(() => sendMessagesSequentially(msgs, index + 1, onDone), 300);
+      }, 600 + Math.random() * 400);
+    };
+
+    // Send pre-messages first, then the question
+    sendMessagesSequentially(preMessages, 0, () => {
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+        msgCounter.current += 1;
+        setMessages((prev) => [...prev, { id: `msg-${msgCounter.current}`, type: "bot", text: question.text }]);
+        setCurrentQuestion(question);
+        setTimeout(() => setShowOptions(true), 200);
+      }, 600 + Math.random() * 400);
+    });
   }, []);
 
   const handleOptionSelect = useCallback(
