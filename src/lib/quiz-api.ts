@@ -24,6 +24,7 @@ export interface QuestionRow {
   order: number;
   is_start_node: boolean;
   pre_messages: string[];
+  type: string;
   created_at: string;
 }
 
@@ -162,7 +163,7 @@ export async function uploadAvatar(quizId: string, file: File): Promise<string> 
 export async function addQuestion(quizId: string, order: number, type: "question" | "text" = "question"): Promise<QuestionRow> {
   const { data, error } = await supabase
     .from("questions")
-    .insert({ quiz_id: quizId, text: type === "text" ? "Nova mensagem" : "Nova pergunta", order, is_start_node: false, type } as any)
+    .insert({ quiz_id: quizId, text: type === "text" ? "Nova mensagem" : "Nova pergunta", order, is_start_node: false, type })
     .select()
     .single();
   if (error) throw error;
