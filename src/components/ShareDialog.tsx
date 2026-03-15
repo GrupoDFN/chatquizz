@@ -89,11 +89,11 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
       return;
     }
 
-    // Look up user
+    // Look up user (case-insensitive)
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("id, email")
-      .eq("email", trimmedEmail)
+      .ilike("email", trimmedEmail)
       .maybeSingle();
 
     if (error || !profile) {
@@ -133,13 +133,14 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
     setSaving(true);
     try {
       for (const p of pendingUsers) {
-        await supabase.from("quiz_shares").upsert({
+        const { error } = await supabase.from("quiz_shares").upsert({
           quiz_id: quizId,
           owner_id: user.id,
           shared_with_user_id: p.userId,
           permission: p.permission,
           fulfilled: false,
         } as any, { onConflict: "quiz_id,shared_with_user_id" });
+        if (error) throw error;
       }
       toast({ title: "Compartilhado!", description: `${pendingUsers.length} usuário(s) adicionado(s).` });
       setPendingUsers([]);
