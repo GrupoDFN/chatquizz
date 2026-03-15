@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { X, UserPlus, Trash2 } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { duplicateQuiz } from "@/lib/quiz-api";
 import { toast } from "@/hooks/use-toast";
 
 interface ShareDialogProps {
@@ -11,6 +10,12 @@ interface ShareDialogProps {
   quizTitle: string;
   open: boolean;
   onClose: () => void;
+}
+
+interface PendingUser {
+  userId: string;
+  email: string;
+  permission: "edit" | "copy";
 }
 
 interface ShareEntry {
@@ -24,14 +29,16 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [mode, setMode] = useState<"edit" | "copy">("copy");
-  const [shares, setShares] = useState<ShareEntry[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
+  const [savedShares, setSavedShares] = useState<ShareEntry[]>([]);
   const [loading, setLoading] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       loadShares();
       setEmail("");
+      setPendingUsers([]);
     }
   }, [open, quizId]);
 
@@ -44,7 +51,6 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
         .eq("quiz_id", quizId);
       if (error) throw error;
 
-      // Look up emails from profiles
       const userIds = (data ?? []).map((s: any) => s.shared_with_user_id);
       let emailMap: Record<string, string> = {};
       if (userIds.length > 0) {
@@ -55,7 +61,7 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
         (profiles ?? []).forEach((p: any) => { emailMap[p.id] = p.email; });
       }
 
-      setShares((data ?? []).map((s: any) => ({
+      setSavedShares((data ?? []).map((s: any) => ({
         ...s,
         email: emailMap[s.shared_with_user_id] || "—",
       })));
@@ -66,73 +72,91 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
     }
   };
 
-  const handleAdd = async () => {
+  const handleAddToList = async () => {
     if (!email.trim() || !user) return;
-    setAdding(true);
-    try {
-      // Find user by email
-      const { data: profile, error: pErr } = await supabase
-        .from("profiles")
-        .select("id, email")
-        .eq("email", email.trim().toLowerCase())
-        .maybeSingle();
 
-      if (pErr) throw pErr;
-      if (!profile) {
-        toast({ title: "Usuário não encontrado", description: "Esse email não está cadastrado na plataforma.", variant: "destructive" });
-        setAdding(false);
-        return;
-      }
+    const trimmedEmail = email.trim().toLowerCase();
 
-      if (profile.id === user.id) {
-        toast({ title: "Erro", description: "Você não pode compartilhar com você mesmo.", variant: "destructive" });
-        setAdding(false);
-        return;
-      }
-
-      if (mode === "copy") {
-        // Just record the share — recipient will auto-duplicate on next dashboard load
-        const { error } = await supabase.from("quiz_shares").upsert({
-          quiz_id: quizId,
-          owner_id: user.id,
-          shared_with_user_id: profile.id,
-          permission: "copy",
-          fulfilled: false,
-        } as any, { onConflict: "quiz_id,shared_with_user_id" });
-        if (error) throw error;
-        toast({ title: "Cópia enviada!", description: `${profile.email} receberá uma cópia ao acessar o dashboard.` });
-      } else {
-        // Share with edit permission
-        const { error } = await supabase.from("quiz_shares").upsert({
-          quiz_id: quizId,
-          owner_id: user.id,
-          shared_with_user_id: profile.id,
-          permission: "edit",
-        }, { onConflict: "quiz_id,shared_with_user_id" });
-        if (error) throw error;
-        toast({ title: "Compartilhado!", description: `${profile.email} agora pode editar este funil.` });
-      }
-
-      setEmail("");
-      loadShares();
-    } catch (err: any) {
-      toast({ title: "Erro ao compartilhar", description: err.message, variant: "destructive" });
-    } finally {
-      setAdding(false);
+    // Check if already in pending list
+    if (pendingUsers.some((p) => p.email === trimmedEmail)) {
+      toast({ title: "Já adicionado", description: "Esse email já está na lista.", variant: "destructive" });
+      return;
     }
+
+    // Check if already shared
+    if (savedShares.some((s) => s.email === trimmedEmail)) {
+      toast({ title: "Já compartilhado", description: "Esse usuário já tem acesso.", variant: "destructive" });
+      return;
+    }
+
+    // Look up user
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("id, email")
+      .eq("email", trimmedEmail)
+      .maybeSingle();
+
+    if (error || !profile) {
+      toast({ title: "Usuário não encontrado", description: "Esse email não está cadastrado na plataforma.", variant: "destructive" });
+      return;
+    }
+
+    if (profile.id === user.id) {
+      toast({ title: "Erro", description: "Você não pode compartilhar com você mesmo.", variant: "destructive" });
+      return;
+    }
+
+    setPendingUsers((prev) => [...prev, { userId: profile.id, email: profile.email, permission: mode }]);
+    setEmail("");
   };
 
-  const handleRemove = async (shareId: string) => {
+  const handleRemovePending = (email: string) => {
+    setPendingUsers((prev) => prev.filter((p) => p.email !== email));
+  };
+
+  const handleRemoveSaved = async (shareId: string) => {
     try {
       await supabase.from("quiz_shares").delete().eq("id", shareId);
-      setShares((prev) => prev.filter((s) => s.id !== shareId));
+      setSavedShares((prev) => prev.filter((s) => s.id !== shareId));
       toast({ title: "Acesso removido" });
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
   };
 
+  const handleSave = async () => {
+    if (!user || pendingUsers.length === 0) {
+      onClose();
+      return;
+    }
+
+    setSaving(true);
+    try {
+      for (const p of pendingUsers) {
+        await supabase.from("quiz_shares").upsert({
+          quiz_id: quizId,
+          owner_id: user.id,
+          shared_with_user_id: p.userId,
+          permission: p.permission,
+          fulfilled: false,
+        } as any, { onConflict: "quiz_id,shared_with_user_id" });
+      }
+      toast({ title: "Compartilhado!", description: `${pendingUsers.length} usuário(s) adicionado(s).` });
+      setPendingUsers([]);
+      onClose();
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!open) return null;
+
+  const allUsers = [
+    ...savedShares.map((s) => ({ key: s.id, email: s.email, permission: s.permission, saved: true as const })),
+    ...pendingUsers.map((p) => ({ key: p.email, email: p.email, permission: p.permission, saved: false as const })),
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 backdrop-blur-sm">
@@ -150,12 +174,12 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            onKeyDown={(e) => e.key === "Enter" && handleAddToList()}
             placeholder="Ex: rafael@gmail.com, sergio@outlook.com, ..."
             className="flex-1 rounded-inner border-none bg-secondary px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
           />
-          <Button variant="ghost" size="sm" onClick={handleAdd} disabled={!email.trim() || adding} className="shrink-0">
-            {adding ? "..." : "add"}
+          <Button variant="ghost" size="sm" onClick={handleAddToList} disabled={!email.trim()} className="shrink-0">
+            add
           </Button>
         </div>
 
@@ -187,29 +211,38 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
 
         {/* Users with access */}
         <h4 className="text-sm font-medium text-foreground mb-2">Usuários com acesso</h4>
-        <div className="rounded-inner bg-secondary p-3 min-h-[48px]">
+        <div className="rounded-inner bg-secondary p-3 min-h-[48px] max-h-[200px] overflow-y-auto">
           {loading ? (
             <p className="text-sm text-muted-foreground">Carregando...</p>
-          ) : shares.filter((s) => s.permission === "edit").length === 0 ? (
+          ) : allUsers.length === 0 ? (
             <p className="text-sm text-muted-foreground">Ainda sem usuários</p>
           ) : (
             <div className="space-y-2">
-              {shares
-                .filter((s) => s.permission === "edit")
-                .map((s) => (
-                  <div key={s.id} className="flex items-center justify-between">
-                    <span className="text-sm text-foreground">{s.email}</span>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleRemove(s.id)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+              {allUsers.map((u) => (
+                <div key={u.key} className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm text-foreground truncate block">{u.email}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {u.permission === "edit" ? "Edição" : "Cópia"}
+                      {!u.saved && " • pendente"}
+                    </span>
                   </div>
-                ))}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-destructive shrink-0"
+                    onClick={() => u.saved ? handleRemoveSaved(u.key) : handleRemovePending(u.email)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        <Button className="w-full mt-4" onClick={onClose}>
-          Salvar
+        <Button className="w-full mt-4" onClick={handleSave} disabled={saving}>
+          {saving ? "Salvando..." : "Salvar"}
         </Button>
       </div>
     </div>
