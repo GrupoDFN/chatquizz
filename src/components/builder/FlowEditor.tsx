@@ -228,6 +228,11 @@ export default function FlowEditor({
   onAddCard,
   onOpenAnalysis,
   onOpenCongrats,
+  showAnalysisCard,
+  showCongratsCard,
+  analysisTitle,
+  endScreenTitle,
+  activeEndPanel,
 }: FlowEditorProps) {
   /* Convert questions to nodes */
   const initialNodes = useMemo(() => {
