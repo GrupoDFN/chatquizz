@@ -29,6 +29,7 @@ const Dashboard = () => {
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
+  const [shareQuiz, setShareQuiz] = useState<{ id: string; title: string } | null>(null);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
