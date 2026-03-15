@@ -233,12 +233,44 @@ const QuizBuilder = () => {
         <div className="flex-1 overflow-auto p-6">
           <div className="mx-auto max-w-xl space-y-3">
             {showThemePicker && (
-              <div className="mb-4 rounded-card bg-card p-4 shadow-card">
-                <h3 className="mb-3 text-sm font-medium text-foreground">Tema do Chat</h3>
-                <ThemePicker
-                  selectedTheme={quiz.theme || "dark-social"}
-                  onSelectTheme={handleThemeChange}
-                />
+              <div className="mb-4 rounded-card bg-card p-4 shadow-card space-y-5">
+                <div>
+                  <h3 className="mb-3 text-sm font-medium text-foreground">Tema do Chat</h3>
+                  <ThemePicker
+                    selectedTheme={quiz.theme || "dark-social"}
+                    onSelectTheme={handleThemeChange}
+                  />
+                </div>
+
+                {/* Avatar & Badge */}
+                <div className="border-t border-border pt-4">
+                  <h3 className="mb-3 text-sm font-medium text-foreground">Avatar e Verificação</h3>
+                  <div className="flex items-center gap-4">
+                    <label className="group relative cursor-pointer">
+                      <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-border group-hover:ring-primary transition-colors">
+                        {quiz.avatar_url ? (
+                          <img src={quiz.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Foto</span>
+                        )}
+                      </div>
+                      <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                      <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px]">+</span>
+                    </label>
+                    <div className="flex-1 space-y-1">
+                      <p className="text-xs text-muted-foreground">Clique para enviar uma foto de avatar</p>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={quiz.show_verified_badge}
+                          onChange={handleVerifiedToggle}
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm text-foreground">Mostrar selo de verificado ✓</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             <div className="mb-4 flex items-center justify-between">
