@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getQuizFull, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import { getThemeById, ChatTheme } from "@/lib/chat-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 
@@ -17,14 +18,14 @@ interface QuestionWithOptions {
   options: { id: string; label: string; next_question_id: string | null }[];
 }
 
-const TypingIndicator = () => (
+const TypingIndicator = ({ theme }: { theme: ChatTheme }) => (
   <div className="flex items-start gap-3 self-start">
     <div className="h-9 w-9 shrink-0" />
-    <div className="flex items-center gap-1 rounded-2xl rounded-tl bg-chat-bot px-4 py-3 shadow-sm w-fit">
+    <div className={`flex items-center gap-1 rounded-2xl rounded-tl px-4 py-3 shadow-sm w-fit ${theme.styles.botBubble}`}>
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="block h-2 w-2 rounded-full bg-white/40"
+          className={`block h-2 w-2 rounded-full ${theme.styles.typingDot}`}
           style={{ animation: "typing-bounce 1.4s infinite", animationDelay: `${i * 0.15}s` }}
         />
       ))}
@@ -32,7 +33,7 @@ const TypingIndicator = () => (
   </div>
 );
 
-const BotBubble = ({ text, avatarUrl, showAvatar }: { text: string; avatarUrl?: string; showAvatar: boolean }) => (
+const BotBubble = ({ text, theme, showAvatar }: { text: string; theme: ChatTheme; showAvatar: boolean }) => (
   <motion.div
     initial={{ opacity: 0, y: 10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -41,29 +42,25 @@ const BotBubble = ({ text, avatarUrl, showAvatar }: { text: string; avatarUrl?: 
   >
     <div className="h-9 w-9 shrink-0">
       {showAvatar && (
-        <div className="h-9 w-9 rounded-full bg-chat-bot flex items-center justify-center text-white text-xs font-bold overflow-hidden">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-          ) : (
-            "Q"
-          )}
+        <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold ${theme.styles.avatarBg} ${theme.styles.avatarText}`}>
+          Q
         </div>
       )}
     </div>
-    <div className="rounded-2xl rounded-tl bg-chat-bot px-4 py-3 text-[15px] leading-relaxed text-white shadow-sm">
+    <div className={`rounded-2xl rounded-tl px-4 py-3 text-[15px] leading-relaxed shadow-sm ${theme.styles.botBubble} ${theme.styles.botText}`}>
       {text}
     </div>
   </motion.div>
 );
 
-const UserBubble = ({ text }: { text: string }) => (
+const UserBubble = ({ text, theme }: { text: string; theme: ChatTheme }) => (
   <motion.div
     initial={{ opacity: 0, y: 10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     transition={{ duration: 0.3, ease: [0.2, 0, 0, 1] }}
     className="max-w-[75%] self-end"
   >
-    <div className="rounded-2xl rounded-tr bg-chat-user px-4 py-3 text-[15px] leading-relaxed text-chat-user-foreground border border-white/10">
+    <div className={`rounded-2xl rounded-tr px-4 py-3 text-[15px] leading-relaxed ${theme.styles.userBubble} ${theme.styles.userText} border ${theme.styles.optionBorder}`}>
       {text}
     </div>
   </motion.div>
@@ -81,6 +78,8 @@ const QuizChat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const msgCounter = useRef(0);
   const initiated = useRef(false);
+
+  const theme = getThemeById(quiz?.theme || "dark-social");
 
   useEffect(() => {
     if (!id) return;
@@ -145,36 +144,36 @@ const QuizChat = () => {
 
   if (notFound) {
     return (
-      <div className="flex h-svh items-center justify-center bg-chat-bg">
-        <p className="text-white/50">Quiz não encontrado.</p>
+      <div className={`flex h-svh items-center justify-center ${theme.styles.bg}`}>
+        <p className={theme.styles.headerSub}>Quiz não encontrado.</p>
       </div>
     );
   }
 
   if (!quiz) {
     return (
-      <div className="flex h-svh items-center justify-center bg-chat-bg">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-chat-bot border-t-transparent" />
+      <div className={`flex h-svh items-center justify-center ${theme.styles.bg}`}>
+        <div className={`h-6 w-6 animate-spin rounded-full border-2 border-t-transparent ${theme.styles.avatarBg}`} />
       </div>
     );
   }
 
   return (
-    <div className="flex h-svh flex-col bg-chat-bg">
+    <div className={`flex h-svh flex-col ${theme.styles.bg}`}>
       {/* Header */}
-      <header className="flex items-center gap-3 border-b border-white/10 bg-chat-header px-4 py-3">
+      <header className={`flex items-center gap-3 border-b px-4 py-3 ${theme.styles.header} ${theme.styles.borderColor}`}>
         <div className="relative">
-          <div className="h-11 w-11 rounded-full bg-chat-bot flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+          <div className={`h-11 w-11 rounded-full flex items-center justify-center font-bold text-sm ${theme.styles.avatarBg} ${theme.styles.avatarText}`}>
             Q
           </div>
-          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-chat-header" />
+          <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 ${theme.styles.statusDot}`} />
         </div>
         <div>
           <div className="flex items-center gap-1.5">
-            <p className="text-[15px] font-semibold text-white">{quiz.title}</p>
-            <CheckCircle2 className="h-4 w-4 text-chat-bot fill-chat-bot stroke-white" />
+            <p className={`text-[15px] font-semibold ${theme.styles.headerText}`}>{quiz.title}</p>
+            <CheckCircle2 className={`h-4 w-4 ${theme.styles.footerAccent}`} />
           </div>
-          <p className="text-[12px] text-white/50">Online agora</p>
+          <p className={`text-[12px] ${theme.styles.headerSub}`}>Online agora</p>
         </div>
       </header>
 
@@ -183,18 +182,16 @@ const QuizChat = () => {
         <div className="mx-auto flex max-w-[500px] flex-col gap-3">
           <AnimatePresence>
             {messages.map((msg, idx) => {
-              const showAvatar =
-                msg.type === "bot" &&
-                (idx === 0 || messages[idx - 1]?.type !== "bot");
+              const showAvatar = msg.type === "bot" && (idx === 0 || messages[idx - 1]?.type !== "bot");
               return msg.type === "bot" ? (
-                <BotBubble key={msg.id} text={msg.text} showAvatar={showAvatar} />
+                <BotBubble key={msg.id} text={msg.text} theme={theme} showAvatar={showAvatar} />
               ) : (
-                <UserBubble key={msg.id} text={msg.text} />
+                <UserBubble key={msg.id} text={msg.text} theme={theme} />
               );
             })}
           </AnimatePresence>
 
-          {isTyping && <TypingIndicator />}
+          {isTyping && <TypingIndicator theme={theme} />}
 
           {showOptions && currentQuestion && !isFinished && (
             <motion.div
@@ -207,7 +204,7 @@ const QuizChat = () => {
                 <button
                   key={opt.id}
                   onClick={() => handleOptionSelect(opt.id, opt.label)}
-                  className="w-full rounded-2xl bg-chat-option px-4 py-4 text-center text-[14px] font-medium text-white border border-white/10 transition-all duration-200 ease-out hover:bg-chat-option-hover active:scale-[0.98]"
+                  className={`w-full rounded-2xl px-4 py-4 text-center text-[14px] font-medium border transition-all duration-200 ease-out active:scale-[0.98] ${theme.styles.optionBg} ${theme.styles.optionText} ${theme.styles.optionBorder} ${theme.styles.optionHover}`}
                 >
                   {opt.label}
                 </button>
@@ -224,7 +221,7 @@ const QuizChat = () => {
             >
               <button
                 onClick={() => window.location.reload()}
-                className="rounded-2xl bg-chat-bot px-6 py-3 text-sm font-medium text-white transition-all hover:brightness-110"
+                className={`rounded-2xl px-6 py-3 text-sm font-medium transition-all hover:brightness-110 ${theme.styles.avatarBg} ${theme.styles.avatarText}`}
               >
                 Refazer quiz
               </button>
@@ -234,9 +231,9 @@ const QuizChat = () => {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 bg-chat-header px-4 py-3 text-center">
-        <p className="text-[11px] text-white/40">
-          Powered by <span className="font-medium text-chat-bot">ChatQuiz</span>
+      <footer className={`border-t px-4 py-3 text-center ${theme.styles.footerBg} ${theme.styles.borderColor}`}>
+        <p className={`text-[11px] ${theme.styles.footerText}`}>
+          Powered by <span className={`font-medium ${theme.styles.footerAccent}`}>ChatQuiz</span>
         </p>
       </footer>
     </div>
