@@ -133,14 +133,26 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
   };
 
   const handleSave = async () => {
-    if (!user || pendingUsers.length === 0) {
-      onClose();
+    if (!user) return;
+
+    const usersToSave = [...pendingUsers];
+
+    // UX fallback: if user typed an email but forgot to click "add", include it on save
+    if (email.trim()) {
+      const pending = await resolvePendingUser(email, mode);
+      if (pending && !usersToSave.some((u) => u.email === pending.email)) {
+        usersToSave.push(pending);
+      }
+    }
+
+    if (usersToSave.length === 0) {
+      toast({ title: "Nenhum usuário", description: "Adicione pelo menos um email para compartilhar.", variant: "destructive" });
       return;
     }
 
     setSaving(true);
     try {
-      for (const p of pendingUsers) {
+      for (const p of usersToSave) {
         const { error } = await supabase.from("quiz_shares").upsert({
           quiz_id: quizId,
           owner_id: user.id,
@@ -150,8 +162,9 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
         } as any, { onConflict: "quiz_id,shared_with_user_id" });
         if (error) throw error;
       }
-      toast({ title: "Compartilhado!", description: `${pendingUsers.length} usuário(s) adicionado(s).` });
+      toast({ title: "Compartilhado!", description: `${usersToSave.length} usuário(s) adicionado(s).` });
       setPendingUsers([]);
+      setEmail("");
       onClose();
     } catch (err: any) {
       toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
