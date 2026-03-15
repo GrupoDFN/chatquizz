@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, MessageSquare, LogOut, MoreVertical, Pencil, Eye, Copy, Share2, Trash2, BarChart3 } from "lucide-react";
+import { Plus, LogOut, MoreVertical, Pencil, Eye, Copy, Share2, Trash2, BarChart3 } from "lucide-react";
+import chatFunnelLogo from "@/assets/logo-chatfunnel.png";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -166,8 +167,7 @@ const Dashboard = () => {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto flex items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">ChatQuiz</h1>
+            <img src={chatFunnelLogo} alt="ChatFunnel" className="h-8" />
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden text-xs text-muted-foreground sm:inline">{user?.email}</span>
@@ -192,7 +192,7 @@ const Dashboard = () => {
           </div>
         ) : quizzes.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-card bg-card p-12 shadow-card">
-            <MessageSquare className="mb-4 h-12 w-12 text-muted-foreground/40" />
+            <img src={chatFunnelLogo} alt="ChatFunnel" className="mb-4 h-12 opacity-40" />
             <p className="mb-2 text-base font-medium text-foreground">Nenhum quiz ainda</p>
             <p className="mb-6 text-sm text-muted-foreground">Crie seu primeiro quiz conversacional</p>
             <Button onClick={() => setShowNewDialog(true)}>
