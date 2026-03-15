@@ -7,6 +7,13 @@ export interface QuizRow {
   theme: string;
   avatar_url: string | null;
   show_verified_badge: boolean;
+  end_screen_template: string;
+  end_screen_title: string;
+  end_screen_subtitle: string;
+  analysis_title: string;
+  analysis_subtitle: string;
+  show_analysis_card: boolean;
+  show_congrats_card: boolean;
   created_at: string;
 }
 
@@ -132,6 +139,12 @@ export async function updateQuizAvatar(quizId: string, avatarUrl: string | null)
 // Update quiz verified badge
 export async function updateQuizVerifiedBadge(quizId: string, show: boolean): Promise<void> {
   const { error } = await supabase.from("quizzes").update({ show_verified_badge: show }).eq("id", quizId);
+  if (error) throw error;
+}
+
+// Update end screen config
+export async function updateQuizEndScreen(quizId: string, updates: Partial<Pick<QuizRow, 'end_screen_template' | 'end_screen_title' | 'end_screen_subtitle' | 'analysis_title' | 'analysis_subtitle' | 'show_analysis_card' | 'show_congrats_card'>>): Promise<void> {
+  const { error } = await supabase.from("quizzes").update(updates as any).eq("id", quizId);
   if (error) throw error;
 }
 

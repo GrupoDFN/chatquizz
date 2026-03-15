@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Link as LinkIcon, Eye, ChevronRight, Palette } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Link as LinkIcon, Eye, ChevronRight, Palette, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuizAvatar, updateQuizVerifiedBadge, uploadAvatar, updateQuestionText, updateQuestionPreMessages, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuizAvatar, updateQuizVerifiedBadge, updateQuizEndScreen, uploadAvatar, updateQuestionText, updateQuestionPreMessages, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
 import { toast } from "@/hooks/use-toast";
 import ThemePicker from "@/components/builder/ThemePicker";
 import QuestionCard from "@/components/builder/QuestionCard";
 import FlowConnections from "@/components/builder/FlowConnections";
+import EndScreenEditor from "@/components/builder/EndScreenEditor";
 
 const QuizBuilder = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,7 @@ const QuizBuilder = () => {
   const [loading, setLoading] = useState(true);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showEndScreenEditor, setShowEndScreenEditor] = useState(false);
 
   const loadQuiz = useCallback(async () => {
     if (!id) return;
@@ -86,6 +88,14 @@ const QuizBuilder = () => {
     }
   };
 
+  const handleEndScreenChange = async (key: string, value: string | boolean) => {
+    setQuiz({ ...quiz, [key]: value } as any);
+    try {
+      await updateQuizEndScreen(quiz.id, { [key]: value } as any);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
   const handleQuestionTextChange = async (questionId: string, text: string) => {
     setQuiz({
       ...quiz,
@@ -224,9 +234,13 @@ const QuizBuilder = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setShowThemePicker(!showThemePicker)}>
+            <Button variant="ghost" size="sm" onClick={() => { setShowThemePicker(!showThemePicker); setShowEndScreenEditor(false); }}>
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Tema</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setShowEndScreenEditor(!showEndScreenEditor); setShowThemePicker(false); }}>
+              <PartyPopper className="h-4 w-4" />
+              <span className="hidden sm:inline">Tela Final</span>
             </Button>
             <Button variant="ghost" size="sm" onClick={handleCopyLink}>
               <LinkIcon className="h-4 w-4" />
@@ -283,6 +297,23 @@ const QuizBuilder = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+            {showEndScreenEditor && (
+              <div className="mb-4 rounded-card bg-card p-4 shadow-card">
+                <h3 className="mb-3 text-sm font-medium text-foreground">Tela Final do Quiz</h3>
+                <EndScreenEditor
+                  config={{
+                    end_screen_template: quiz.end_screen_template || "congrats-green",
+                    end_screen_title: quiz.end_screen_title || "Você foi selecionada!",
+                    end_screen_subtitle: quiz.end_screen_subtitle || "Sua vaga está garantida",
+                    analysis_title: quiz.analysis_title || "ANALISANDO",
+                    analysis_subtitle: quiz.analysis_subtitle || "Sistema em processamento",
+                    show_analysis_card: quiz.show_analysis_card ?? true,
+                    show_congrats_card: quiz.show_congrats_card ?? true,
+                  }}
+                  onChange={handleEndScreenChange}
+                />
               </div>
             )}
             <div className="mb-4 flex items-center justify-between">
