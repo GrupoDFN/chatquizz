@@ -249,6 +249,11 @@ const QuizBuilder = () => {
           <FlowEditor
             questions={quiz.questions}
             selectedQuestionId={selectedQuestionId}
+            showAnalysisCard={quiz.show_analysis_card ?? true}
+            showCongratsCard={quiz.show_congrats_card ?? true}
+            analysisTitle={quiz.analysis_title}
+            endScreenTitle={quiz.end_screen_title}
+            activeEndPanel={endScreenPanel}
             onSelectQuestion={(id) => {
               setSelectedQuestionId(id);
               if (id) {
