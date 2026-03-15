@@ -33,7 +33,7 @@ const TypingIndicator = ({ theme }: { theme: ChatTheme }) => (
   </div>
 );
 
-const BotBubble = ({ text, theme, showAvatar }: { text: string; theme: ChatTheme; showAvatar: boolean }) => (
+const BotBubble = ({ text, theme, showAvatar, avatarUrl }: { text: string; theme: ChatTheme; showAvatar: boolean; avatarUrl?: string | null }) => (
   <motion.div
     initial={{ opacity: 0, y: 10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
