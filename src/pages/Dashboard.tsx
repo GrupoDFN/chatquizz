@@ -1,9 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ExternalLink, Pencil, Trash2, MessageSquare, LogOut } from "lucide-react";
+import { Plus, MessageSquare, LogOut, MoreVertical, Pencil, Eye, Copy, Share2, Trash2, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
-import { getUserQuizzes, createQuiz, deleteQuiz } from "@/lib/quiz-api";
+import { getUserQuizzes, createQuiz, deleteQuiz, duplicateQuiz } from "@/lib/quiz-api";
 import { toast } from "@/hooks/use-toast";
 
 interface QuizRow {
@@ -60,6 +67,17 @@ const Dashboard = () => {
       toast({ title: "Quiz excluído", description: `"${title}" foi removido.` });
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleDuplicate = async (id: string) => {
+    if (!user) return;
+    try {
+      const newQuiz = await duplicateQuiz(id, user.id);
+      setQuizzes((prev) => [newQuiz, ...prev]);
+      toast({ title: "Quiz duplicado!", description: `"${newQuiz.title}" foi criado.` });
+    } catch (err: any) {
+      toast({ title: "Erro ao duplicar", description: err.message, variant: "destructive" });
     }
   };
 
@@ -120,29 +138,50 @@ const Dashboard = () => {
                 key={quiz.id}
                 className="group rounded-card bg-card p-6 shadow-card transition-shadow duration-200 hover:shadow-card-hover"
               >
-                <div className="mb-4">
-                  <h3 className="text-base font-medium text-foreground truncate">{quiz.title}</h3>
-                  <p className="mt-1 text-xs tabular-nums text-muted-foreground">
-                    {new Date(quiz.created_at).toLocaleDateString("pt-BR")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => navigate(`/builder/${quiz.id}`)} className="text-xs">
-                    <Pencil className="h-3.5 w-3.5" />
-                    Editar
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleCopyLink(quiz.id)} className="text-xs">
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Link
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(quiz.id, quiz.title)}
-                    className="text-xs text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-medium text-foreground truncate">{quiz.title}</h3>
+                    <p className="mt-1 text-xs tabular-nums text-muted-foreground">
+                      {new Date(quiz.created_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => navigate(`/builder/${quiz.id}`)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => window.open(`/quiz/${quiz.id}`, "_blank")}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Visualizar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDuplicate(quiz.id)}>
+                        <Copy className="mr-2 h-4 w-4" />
+                        Duplicar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleCopyLink(quiz.id)}>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Compartilhar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/leads/${quiz.id}`)}>
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Leads
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => handleDelete(quiz.id, quiz.title)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             ))}
