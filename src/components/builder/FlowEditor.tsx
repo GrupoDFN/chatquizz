@@ -47,6 +47,8 @@ interface FlowEditorProps {
   onSelectQuestion: (id: string | null) => void;
   onConnectionChange: (optionId: string, nextQuestionId: string | null) => void;
   onAddCard: (type: "question" | "text") => void;
+  onOpenAnalysis: () => void;
+  onOpenCongrats: () => void;
 }
 
 /* ─── End Node ─── */
