@@ -228,7 +228,7 @@ const Dashboard = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      {!quiz.isShared && (
+                      {!quiz.isCopy && (
                         <DropdownMenuItem onClick={() => navigate(`/builder/${quiz.id}`)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Editar
@@ -238,7 +238,7 @@ const Dashboard = () => {
                         <Eye className="mr-2 h-4 w-4" />
                         Visualizar
                       </DropdownMenuItem>
-                      {!quiz.isShared && (
+                      {!quiz.isCopy && (
                         <>
                           <DropdownMenuItem onClick={() => handleDuplicate(quiz.id)}>
                             <Copy className="mr-2 h-4 w-4" />
