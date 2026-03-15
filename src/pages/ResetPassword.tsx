@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { MessageSquare } from "lucide-react";
+import chatFunnelLogo from "@/assets/logo-chatfunnel.png";
 import { toast } from "@/hooks/use-toast";
 
 const ResetPassword = () => {
