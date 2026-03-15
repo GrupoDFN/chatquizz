@@ -1,63 +1,109 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ExternalLink, Pencil, Trash2, MessageSquare } from "lucide-react";
+import { Plus, ExternalLink, Pencil, Trash2, MessageSquare, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getQuizzes, createQuiz, deleteQuiz } from "@/lib/quiz-store";
-import { Quiz } from "@/lib/types";
+import { useAuth } from "@/hooks/useAuth";
+import { getUserQuizzes, createQuiz, deleteQuiz } from "@/lib/quiz-api";
 import { toast } from "@/hooks/use-toast";
 
+interface QuizRow {
+  id: string;
+  title: string;
+  created_at: string;
+}
+
 const Dashboard = () => {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizzes, setQuizzes] = useState<QuizRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
-  useEffect(() => {
-    setQuizzes(getQuizzes());
+  const loadQuizzes = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getUserQuizzes();
+      setQuizzes(data);
+    } catch (err: any) {
+      toast({ title: "Erro ao carregar quizzes", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleCreate = () => {
-    if (!newTitle.trim()) return;
-    const quiz = createQuiz(newTitle.trim());
-    setQuizzes(getQuizzes());
-    setNewTitle("");
-    setShowNewDialog(false);
-    toast({ title: "Quiz criado!", description: `"${quiz.title}" está pronto para edição.` });
-    navigate(`/builder/${quiz.id}`);
+  useEffect(() => {
+    loadQuizzes();
+  }, [loadQuizzes]);
+
+  const handleCreate = async () => {
+    if (!newTitle.trim() || !user) return;
+    setCreating(true);
+    try {
+      const quiz = await createQuiz(newTitle.trim(), user.id);
+      setNewTitle("");
+      setShowNewDialog(false);
+      toast({ title: "Quiz criado!" });
+      navigate(`/builder/${quiz.id}`);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setCreating(false);
+    }
   };
 
-  const handleDelete = (id: string, title: string) => {
-    deleteQuiz(id);
-    setQuizzes(getQuizzes());
-    toast({ title: "Quiz excluído", description: `"${title}" foi removido.` });
+  const handleDelete = async (id: string, title: string) => {
+    try {
+      await deleteQuiz(id);
+      setQuizzes((prev) => prev.filter((q) => q.id !== id));
+      toast({ title: "Quiz excluído", description: `"${title}" foi removido.` });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
   };
 
   const handleCopyLink = (id: string) => {
     const url = `${window.location.origin}/quiz/${id}`;
     navigator.clipboard.writeText(url);
-    toast({ title: "Link copiado!", description: "O link do quiz foi copiado para a área de transferência." });
+    toast({ title: "Link copiado!" });
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto flex items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-semibold tracking-tight text-foreground">ChatQuiz</h1>
           </div>
-          <Button onClick={() => setShowNewDialog(true)} size="sm">
-            <Plus className="h-4 w-4" />
-            Novo Quiz
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="hidden text-xs text-muted-foreground sm:inline">{user?.email}</span>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sair</span>
+            </Button>
+            <Button onClick={() => setShowNewDialog(true)} size="sm">
+              <Plus className="h-4 w-4" />
+              Novo Quiz
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 sm:px-6">
         <h2 className="mb-6 text-lg font-medium text-foreground">Seus Quizzes</h2>
 
-        {quizzes.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : quizzes.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-card bg-card p-12 shadow-card">
             <MessageSquare className="mb-4 h-12 w-12 text-muted-foreground/40" />
             <p className="mb-2 text-base font-medium text-foreground">Nenhum quiz ainda</p>
@@ -77,28 +123,15 @@ const Dashboard = () => {
                 <div className="mb-4">
                   <h3 className="text-base font-medium text-foreground truncate">{quiz.title}</h3>
                   <p className="mt-1 text-xs tabular-nums text-muted-foreground">
-                    {new Date(quiz.createdAt).toLocaleDateString("pt-BR")}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {quiz.questions.length} {quiz.questions.length === 1 ? "pergunta" : "perguntas"}
+                    {new Date(quiz.created_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/builder/${quiz.id}`)}
-                    className="text-xs"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => navigate(`/builder/${quiz.id}`)} className="text-xs">
                     <Pencil className="h-3.5 w-3.5" />
                     Editar
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleCopyLink(quiz.id)}
-                    className="text-xs"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => handleCopyLink(quiz.id)} className="text-xs">
                     <ExternalLink className="h-3.5 w-3.5" />
                     Link
                   </Button>
@@ -135,8 +168,8 @@ const Dashboard = () => {
               <Button variant="ghost" size="sm" onClick={() => { setShowNewDialog(false); setNewTitle(""); }}>
                 Cancelar
               </Button>
-              <Button size="sm" onClick={handleCreate} disabled={!newTitle.trim()}>
-                Criar
+              <Button size="sm" onClick={handleCreate} disabled={!newTitle.trim() || creating}>
+                {creating ? "Criando..." : "Criar"}
               </Button>
             </div>
           </div>

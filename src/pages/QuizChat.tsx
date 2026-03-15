@@ -1,9 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { getQuiz } from "@/lib/quiz-store";
-import { Quiz, Question, ChatMessage } from "@/lib/types";
+import { getQuizFull, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare } from "lucide-react";
+
+interface ChatMessage {
+  id: string;
+  type: "bot" | "user";
+  text: string;
+}
+
+interface QuestionWithOptions {
+  id: string;
+  text: string;
+  is_start_node: boolean;
+  options: { id: string; label: string; next_question_id: string | null }[];
+}
 
 const TypingIndicator = () => (
   <div className="flex items-center gap-1 rounded-bubble rounded-tl-[4px] bg-card px-4 py-3 shadow-sm w-fit">
@@ -11,10 +23,7 @@ const TypingIndicator = () => (
       <span
         key={i}
         className="block h-2 w-2 rounded-full bg-muted-foreground/40"
-        style={{
-          animation: "typing-bounce 1.4s infinite",
-          animationDelay: `${i * 0.15}s`,
-        }}
+        style={{ animation: "typing-bounce 1.4s infinite", animationDelay: `${i * 0.15}s` }}
       />
     ))}
   </div>
@@ -46,69 +55,45 @@ const UserBubble = ({ text }: { text: string }) => (
   </motion.div>
 );
 
-const OptionButtons = ({
-  options,
-  onSelect,
-}: {
-  options: { id: string; label: string }[];
-  onSelect: (id: string, label: string) => void;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3, delay: 0.1, ease: [0.2, 0, 0, 1] }}
-    className="flex flex-col gap-2 w-full"
-  >
-    {options.map((opt) => (
-      <button
-        key={opt.id}
-        onClick={() => onSelect(opt.id, opt.label)}
-        className="w-full rounded-inner bg-card px-4 py-3.5 text-left text-sm font-medium text-foreground shadow-card transition-all duration-200 ease-out hover:shadow-card-hover hover:bg-secondary active:scale-[0.98]"
-      >
-        {opt.label}
-      </button>
-    ))}
-  </motion.div>
-);
-
 const QuizChat = () => {
   const { id } = useParams<{ id: string }>();
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quiz, setQuiz] = useState<QuizWithQuestionsAndOptions | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<QuestionWithOptions | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const msgCounter = useRef(0);
+  const initiated = useRef(false);
 
   useEffect(() => {
-    if (id) {
-      const q = getQuiz(id);
-      if (q) {
-        setQuiz(q);
-        const startQuestion = q.questions.find((q) => q.isStartNode) || q.questions[0];
-        if (startQuestion) {
-          showBotMessage(startQuestion);
-        }
-      }
-    }
+    if (!id) return;
+    getQuizFull(id).then((data) => {
+      if (data) setQuiz(data);
+      else setNotFound(true);
+    }).catch(() => setNotFound(true));
   }, [id]);
+
+  useEffect(() => {
+    if (!quiz || initiated.current) return;
+    initiated.current = true;
+    const startQ = quiz.questions.find((q) => q.is_start_node) || quiz.questions[0];
+    if (startQ) showBotMessage(startQ);
+  }, [quiz]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping, showOptions]);
 
-  const showBotMessage = useCallback((question: Question) => {
+  const showBotMessage = useCallback((question: QuestionWithOptions) => {
     setShowOptions(false);
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
       msgCounter.current += 1;
-      setMessages((prev) => [
-        ...prev,
-        { id: `msg-${msgCounter.current}`, type: "bot", text: question.text },
-      ]);
+      setMessages((prev) => [...prev, { id: `msg-${msgCounter.current}`, type: "bot", text: question.text }]);
       setCurrentQuestion(question);
       setTimeout(() => setShowOptions(true), 200);
     }, 800 + Math.random() * 400);
@@ -119,14 +104,10 @@ const QuizChat = () => {
       if (!currentQuestion || !quiz) return;
       setShowOptions(false);
       msgCounter.current += 1;
-      setMessages((prev) => [
-        ...prev,
-        { id: `msg-${msgCounter.current}`, type: "user", text: label },
-      ]);
+      setMessages((prev) => [...prev, { id: `msg-${msgCounter.current}`, type: "user", text: label }]);
 
       const option = currentQuestion.options.find((o) => o.id === optionId);
-      if (!option || !option.nextQuestionId) {
-        // End of quiz
+      if (!option || !option.next_question_id) {
         setTimeout(() => {
           setIsTyping(true);
           setTimeout(() => {
@@ -134,11 +115,7 @@ const QuizChat = () => {
             msgCounter.current += 1;
             setMessages((prev) => [
               ...prev,
-              {
-                id: `msg-${msgCounter.current}`,
-                type: "bot",
-                text: "Obrigado por responder! 🎉 Em breve você receberá mais informações.",
-              },
+              { id: `msg-${msgCounter.current}`, type: "bot", text: "Obrigado por responder! 🎉 Em breve você receberá mais informações." },
             ]);
             setIsFinished(true);
           }, 600);
@@ -146,15 +123,13 @@ const QuizChat = () => {
         return;
       }
 
-      const nextQ = quiz.questions.find((q) => q.id === option.nextQuestionId);
-      if (nextQ) {
-        setTimeout(() => showBotMessage(nextQ), 300);
-      }
+      const nextQ = quiz.questions.find((q) => q.id === option.next_question_id);
+      if (nextQ) setTimeout(() => showBotMessage(nextQ), 300);
     },
     [currentQuestion, quiz, showBotMessage]
   );
 
-  if (!quiz) {
+  if (notFound) {
     return (
       <div className="flex h-svh items-center justify-center bg-background">
         <p className="text-muted-foreground">Quiz não encontrado.</p>
@@ -162,9 +137,16 @@ const QuizChat = () => {
     );
   }
 
+  if (!quiz) {
+    return (
+      <div className="flex h-svh items-center justify-center bg-background">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-svh flex-col bg-background">
-      {/* Chat Header */}
       <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
           <MessageSquare className="h-4 w-4 text-primary-foreground" />
@@ -175,26 +157,33 @@ const QuizChat = () => {
         </div>
       </header>
 
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto flex max-w-[500px] flex-col gap-3">
           <AnimatePresence>
             {messages.map((msg) =>
-              msg.type === "bot" ? (
-                <BotBubble key={msg.id} text={msg.text} />
-              ) : (
-                <UserBubble key={msg.id} text={msg.text} />
-              )
+              msg.type === "bot" ? <BotBubble key={msg.id} text={msg.text} /> : <UserBubble key={msg.id} text={msg.text} />
             )}
           </AnimatePresence>
 
           {isTyping && <TypingIndicator />}
 
           {showOptions && currentQuestion && !isFinished && (
-            <OptionButtons
-              options={currentQuestion.options}
-              onSelect={handleOptionSelect}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="flex flex-col gap-2 w-full"
+            >
+              {currentQuestion.options.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => handleOptionSelect(opt.id, opt.label)}
+                  className="w-full rounded-inner bg-card px-4 py-3.5 text-left text-sm font-medium text-foreground shadow-card transition-all duration-200 ease-out hover:shadow-card-hover hover:bg-secondary active:scale-[0.98]"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </motion.div>
           )}
 
           {isFinished && (
@@ -215,7 +204,6 @@ const QuizChat = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-card px-4 py-3 text-center">
         <p className="text-[11px] text-muted-foreground">
           Powered by <span className="font-medium text-primary">ChatQuiz</span>
