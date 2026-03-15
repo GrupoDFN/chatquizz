@@ -98,8 +98,10 @@ const QuizBuilder = () => {
 
   const handleEndScreenChange = async (key: string, value: string | boolean) => {
     setQuiz({ ...quiz, [key]: value } as any);
-    try { await updateQuizEndScreen(quiz.id, { [key]: value } as any); }
-    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
+    try {
+      await updateQuizEndScreen(quiz.id, { [key]: value } as any);
+      toast({ title: "✓ Salvo!" });
+    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleQuestionTextChange = async (questionId: string, text: string) => {
@@ -249,6 +251,11 @@ const QuizBuilder = () => {
           <FlowEditor
             questions={quiz.questions}
             selectedQuestionId={selectedQuestionId}
+            showAnalysisCard={quiz.show_analysis_card ?? true}
+            showCongratsCard={quiz.show_congrats_card ?? true}
+            analysisTitle={quiz.analysis_title}
+            endScreenTitle={quiz.end_screen_title}
+            activeEndPanel={endScreenPanel}
             onSelectQuestion={(id) => {
               setSelectedQuestionId(id);
               if (id) {

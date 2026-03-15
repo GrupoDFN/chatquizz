@@ -49,10 +49,17 @@ interface FlowEditorProps {
   onAddCard: (type: "question" | "text") => void;
   onOpenAnalysis: () => void;
   onOpenCongrats: () => void;
+  showAnalysisCard?: boolean;
+  showCongratsCard?: boolean;
+  analysisTitle?: string;
+  endScreenTitle?: string;
+  activeEndPanel?: "analysis" | "congrats" | null;
 }
 
-/* ─── End Node ─── */
+/* ─── Special Node IDs ─── */
 const END_NODE_ID = "__end__";
+const ANALYSIS_NODE_ID = "__analysis__";
+const CONGRATS_NODE_ID = "__congrats__";
 
 function EndNode() {
   return (
@@ -60,6 +67,54 @@ function EndNode() {
       <Handle type="target" position={Position.Left} className="!h-3 !w-3 !bg-destructive/60 !border-destructive/40" />
       <Flag className="h-4 w-4 text-destructive" />
       <span className="text-sm font-semibold text-destructive">Fim do Quiz</span>
+    </div>
+  );
+}
+
+/* ─── Analysis Node ─── */
+function AnalysisNode({ data, selected }: NodeProps) {
+  const { label } = data as { label: string };
+  return (
+    <div className={`min-w-[200px] max-w-[260px] rounded-2xl border-2 bg-card shadow-md transition-all ${
+      selected ? "border-orange-500 shadow-lg ring-2 ring-orange-500/20" : "border-orange-500/30"
+    }`}>
+      <Handle type="target" position={Position.Left} className="!h-3 !w-3 !bg-orange-500 !border-orange-500/40" />
+      <div className="flex items-center gap-2 px-4 py-3">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white">
+          <BarChart3 className="h-3 w-3" />
+        </span>
+        <p className="text-sm font-semibold text-foreground truncate flex-1">{label || "Análise"}</p>
+        <span className="shrink-0 rounded-full bg-orange-500/15 px-2 py-0.5 text-[9px] font-bold text-orange-600 uppercase tracking-wider">
+          Análise
+        </span>
+      </div>
+      <div className="px-3 pb-3">
+        <div className="relative flex items-center">
+          <span className="text-[11px] text-muted-foreground pl-1 py-1">Próximo →</span>
+          <Handle type="source" position={Position.Right} id="analysis-output" className="!h-3 !w-3 !bg-orange-500/70 !border-orange-500/30 !right-[-5px]" style={{ top: "auto" }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Congrats Node ─── */
+function CongratsNode({ data, selected }: NodeProps) {
+  const { label } = data as { label: string };
+  return (
+    <div className={`min-w-[200px] max-w-[260px] rounded-2xl border-2 bg-card shadow-md transition-all ${
+      selected ? "border-emerald-500 shadow-lg ring-2 ring-emerald-500/20" : "border-emerald-500/30"
+    }`}>
+      <Handle type="target" position={Position.Left} className="!h-3 !w-3 !bg-emerald-500 !border-emerald-500/40" />
+      <div className="flex items-center gap-2 px-4 py-3">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+          <PartyPopper className="h-3 w-3" />
+        </span>
+        <p className="text-sm font-semibold text-foreground truncate flex-1">{label || "Resposta"}</p>
+        <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[9px] font-bold text-emerald-600 uppercase tracking-wider">
+          Resposta
+        </span>
+      </div>
     </div>
   );
 }
@@ -160,6 +215,8 @@ const nodeTypes = {
   question: QuestionNode,
   text: TextNode,
   end: EndNode,
+  analysis: AnalysisNode,
+  congrats: CongratsNode,
 };
 
 /* ─── Main Component ─── */
@@ -171,6 +228,11 @@ export default function FlowEditor({
   onAddCard,
   onOpenAnalysis,
   onOpenCongrats,
+  showAnalysisCard,
+  showCongratsCard,
+  analysisTitle,
+  endScreenTitle,
+  activeEndPanel,
 }: FlowEditorProps) {
   /* Convert questions to nodes */
   const initialNodes = useMemo(() => {
@@ -197,8 +259,32 @@ export default function FlowEditor({
       draggable: true,
     });
 
+    // Analysis card node
+    if (showAnalysisCard) {
+      qNodes.push({
+        id: ANALYSIS_NODE_ID,
+        type: "analysis",
+        position: { x: 650, y: 0 },
+        selected: activeEndPanel === "analysis",
+        data: { label: analysisTitle || "ANALISANDO" },
+        draggable: true,
+      });
+    }
+
+    // Congrats card node
+    if (showCongratsCard) {
+      qNodes.push({
+        id: CONGRATS_NODE_ID,
+        type: "congrats",
+        position: { x: 650, y: showAnalysisCard ? 150 : 0 },
+        selected: activeEndPanel === "congrats",
+        data: { label: endScreenTitle || "Resposta Final" },
+        draggable: true,
+      });
+    }
+
     return qNodes;
-  }, [questions, selectedQuestionId]);
+  }, [questions, selectedQuestionId, showAnalysisCard, showCongratsCard, analysisTitle, endScreenTitle, activeEndPanel]);
 
   /* Convert options to edges — only when explicitly connected */
   const initialEdges = useMemo(() => {
@@ -285,9 +371,17 @@ export default function FlowEditor({
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
       if (node.id === END_NODE_ID) return;
+      if (node.id === ANALYSIS_NODE_ID) {
+        onOpenAnalysis();
+        return;
+      }
+      if (node.id === CONGRATS_NODE_ID) {
+        onOpenCongrats();
+        return;
+      }
       onSelectQuestion(node.id === selectedQuestionId ? null : node.id);
     },
-    [onSelectQuestion, selectedQuestionId]
+    [onSelectQuestion, selectedQuestionId, onOpenAnalysis, onOpenCongrats]
   );
 
   const onPaneClick = useCallback(() => {
