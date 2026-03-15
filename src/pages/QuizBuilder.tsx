@@ -189,6 +189,10 @@ const QuizBuilder = () => {
             />
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowThemePicker(!showThemePicker)}>
+              <Palette className="h-4 w-4" />
+              <span className="hidden sm:inline">Tema</span>
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleCopyLink}>
               <LinkIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Link</span>
