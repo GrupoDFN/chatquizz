@@ -15,6 +15,7 @@ interface QuestionWithOptions {
   id: string;
   text: string;
   is_start_node: boolean;
+  pre_messages: string[];
   options: { id: string; label: string; next_question_id: string | null }[];
 }
 
