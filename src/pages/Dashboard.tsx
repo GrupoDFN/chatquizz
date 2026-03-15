@@ -11,12 +11,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserQuizzes, createQuiz, deleteQuiz, duplicateQuiz } from "@/lib/quiz-api";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import ShareDialog from "@/components/ShareDialog";
 
 interface QuizRow {
   id: string;
   title: string;
   created_at: string;
+  isShared?: boolean;
+  permission?: string;
 }
 
 const Dashboard = () => {
