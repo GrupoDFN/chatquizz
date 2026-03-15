@@ -223,26 +223,32 @@ const Dashboard = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => navigate(`/builder/${quiz.id}`)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
+                      {!quiz.isShared && (
+                        <DropdownMenuItem onClick={() => navigate(`/builder/${quiz.id}`)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => window.open(`/quiz/${quiz.id}`, "_blank")}>
                         <Eye className="mr-2 h-4 w-4" />
                         Visualizar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDuplicate(quiz.id)}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Duplicar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setShareQuiz({ id: quiz.id, title: quiz.title })}>
-                        <Share2 className="mr-2 h-4 w-4" />
-                        Compartilhar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/leads/${quiz.id}`)}>
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        Leads
-                      </DropdownMenuItem>
+                      {!quiz.isShared && (
+                        <>
+                          <DropdownMenuItem onClick={() => handleDuplicate(quiz.id)}>
+                            <Copy className="mr-2 h-4 w-4" />
+                            Duplicar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setShareQuiz({ id: quiz.id, title: quiz.title })}>
+                            <Share2 className="mr-2 h-4 w-4" />
+                            Compartilhar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/leads/${quiz.id}`)}>
+                            <BarChart3 className="mr-2 h-4 w-4" />
+                            Leads
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => handleDelete(quiz.id, quiz.title, quiz.isShared)}
