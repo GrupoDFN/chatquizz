@@ -56,7 +56,7 @@ const Dashboard = () => {
               // Delete FIRST to prevent re-processing on concurrent loads
               await supabase.from("quiz_shares").delete().eq("id", share.id);
               try {
-                await duplicateQuiz(share.quiz_id, user.id);
+                await duplicateQuiz(share.quiz_id, user.id, true);
               } catch {
                 // Duplication failed but share is already deleted — no infinite loop
               }
