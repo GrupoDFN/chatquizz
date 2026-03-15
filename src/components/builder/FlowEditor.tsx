@@ -234,12 +234,19 @@ export default function FlowEditor({
   endScreenTitle,
   activeEndPanel,
 }: FlowEditorProps) {
+  // Track user-dragged positions
+  const positionsRef = useRef<Record<string, { x: number; y: number }>>({});
+  const initializedRef = useRef(false);
+
   /* Convert questions to nodes */
   const initialNodes = useMemo(() => {
+    const getPos = (id: string, defaultPos: { x: number; y: number }) =>
+      positionsRef.current[id] || defaultPos;
+
     const qNodes: Node[] = questions.map((q, i) => ({
       id: q.id,
       type: q.type === "text" ? "text" : "question",
-      position: { x: i % 2 === 0 ? 100 : 400, y: i * 200 },
+      position: getPos(q.id, { x: i % 2 === 0 ? 100 : 400, y: i * 200 }),
       selected: q.id === selectedQuestionId,
       data: {
         label: q.text,
@@ -249,34 +256,31 @@ export default function FlowEditor({
       },
     }));
 
-    // Always show the End node
     qNodes.push({
       id: END_NODE_ID,
       type: "end",
-      position: { x: 600, y: (questions.length - 1) * 200 + 100 },
+      position: getPos(END_NODE_ID, { x: 600, y: (questions.length - 1) * 200 + 100 }),
       data: {},
       selectable: false,
       draggable: true,
     });
 
-    // Analysis card node
     if (showAnalysisCard) {
       qNodes.push({
         id: ANALYSIS_NODE_ID,
         type: "analysis",
-        position: { x: 650, y: 0 },
+        position: getPos(ANALYSIS_NODE_ID, { x: 650, y: 0 }),
         selected: activeEndPanel === "analysis",
         data: { label: analysisTitle || "ANALISANDO" },
         draggable: true,
       });
     }
 
-    // Congrats card node
     if (showCongratsCard) {
       qNodes.push({
         id: CONGRATS_NODE_ID,
         type: "congrats",
-        position: { x: 650, y: showAnalysisCard ? 150 : 0 },
+        position: getPos(CONGRATS_NODE_ID, { x: 650, y: showAnalysisCard ? 150 : 0 }),
         selected: activeEndPanel === "congrats",
         data: { label: endScreenTitle || "Resposta Final" },
         draggable: true,
@@ -286,12 +290,11 @@ export default function FlowEditor({
     return qNodes;
   }, [questions, selectedQuestionId, showAnalysisCard, showCongratsCard, analysisTitle, endScreenTitle, activeEndPanel]);
 
-  /* Convert options to edges — only when explicitly connected */
+  /* Convert options to edges */
   const initialEdges = useMemo(() => {
     const edges: Edge[] = [];
     questions.forEach((q) => {
       if (q.type === "text") {
-        // Text nodes: check if first option has a next_question_id
         const firstOpt = q.options[0];
         if (firstOpt?.next_question_id) {
           edges.push({
@@ -306,7 +309,6 @@ export default function FlowEditor({
         }
       } else {
         q.options.forEach((opt) => {
-          // Only create edge if explicitly connected to something
           if (!opt.next_question_id) return;
           edges.push({
             id: `e-${opt.id}`,
@@ -326,8 +328,47 @@ export default function FlowEditor({
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  // Save positions whenever nodes change (drag etc.)
+  const handleNodesChange = useCallback(
+    (changes: any) => {
+      onNodesChange(changes);
+      // After changes applied, capture positions
+      setTimeout(() => {
+        setNodes((currentNodes) => {
+          currentNodes.forEach((n) => {
+            positionsRef.current[n.id] = { ...n.position };
+          });
+          return currentNodes;
+        });
+      }, 0);
+    },
+    [onNodesChange, setNodes]
+  );
+
   useEffect(() => {
-    setNodes(initialNodes);
+    // On first load, set positions from initial layout
+    if (!initializedRef.current) {
+      initialNodes.forEach((n) => {
+        if (!positionsRef.current[n.id]) {
+          positionsRef.current[n.id] = { ...n.position };
+        }
+      });
+      initializedRef.current = true;
+    }
+
+    // Update node data (labels, options, selection) without resetting positions
+    setNodes((currentNodes) => {
+      const currentPosMap: Record<string, { x: number; y: number }> = {};
+      currentNodes.forEach((n) => {
+        currentPosMap[n.id] = { ...n.position };
+      });
+
+      return initialNodes.map((n) => ({
+        ...n,
+        position: currentPosMap[n.id] || positionsRef.current[n.id] || n.position,
+      }));
+    });
+
     setEdges(initialEdges);
   }, [initialNodes, initialEdges, setNodes, setEdges]);
 
