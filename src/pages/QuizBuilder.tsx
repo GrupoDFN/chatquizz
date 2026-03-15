@@ -1,13 +1,29 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Link as LinkIcon, Eye, ChevronRight, Palette, PartyPopper } from "lucide-react";
+import { ArrowLeft, Plus, Link as LinkIcon, Eye, Palette, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuizAvatar, updateQuizVerifiedBadge, updateQuizEndScreen, uploadAvatar, updateQuestionText, updateQuestionPreMessages, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import {
+  getQuizFull,
+  updateQuizTitle,
+  updateQuizTheme,
+  updateQuizAvatar,
+  updateQuizVerifiedBadge,
+  updateQuizEndScreen,
+  uploadAvatar,
+  updateQuestionText,
+  updateQuestionPreMessages,
+  addQuestion,
+  addOption,
+  updateOption,
+  deleteQuestion,
+  deleteOption,
+  QuizWithQuestionsAndOptions,
+} from "@/lib/quiz-api";
 import { toast } from "@/hooks/use-toast";
 import ThemePicker from "@/components/builder/ThemePicker";
 import QuestionCard from "@/components/builder/QuestionCard";
-import FlowConnections from "@/components/builder/FlowConnections";
 import EndScreenEditor from "@/components/builder/EndScreenEditor";
+import FlowEditor from "@/components/builder/FlowEditor";
 
 const QuizBuilder = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,22 +63,17 @@ const QuizBuilder = () => {
 
   if (!quiz) return null;
 
+  /* ── Handlers ── */
   const handleTitleChange = async (title: string) => {
     setQuiz({ ...quiz, title });
-    try {
-      await updateQuizTitle(quiz.id, title);
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    try { await updateQuizTitle(quiz.id, title); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleThemeChange = async (theme: string) => {
     setQuiz({ ...quiz, theme });
-    try {
-      await updateQuizTheme(quiz.id, theme);
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    try { await updateQuizTheme(quiz.id, theme); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,82 +84,61 @@ const QuizBuilder = () => {
       await updateQuizAvatar(quiz.id, url);
       setQuiz({ ...quiz, avatar_url: url });
       toast({ title: "Avatar atualizado!" });
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleVerifiedToggle = async () => {
     const newVal = !quiz.show_verified_badge;
     setQuiz({ ...quiz, show_verified_badge: newVal });
-    try {
-      await updateQuizVerifiedBadge(quiz.id, newVal);
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    try { await updateQuizVerifiedBadge(quiz.id, newVal); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleEndScreenChange = async (key: string, value: string | boolean) => {
     setQuiz({ ...quiz, [key]: value } as any);
-    try {
-      await updateQuizEndScreen(quiz.id, { [key]: value } as any);
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    try { await updateQuizEndScreen(quiz.id, { [key]: value } as any); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
+
   const handleQuestionTextChange = async (questionId: string, text: string) => {
-    setQuiz({
-      ...quiz,
-      questions: quiz.questions.map((q) => (q.id === questionId ? { ...q, text } : q)),
-    });
-    try {
-      await updateQuestionText(questionId, text);
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    setQuiz({ ...quiz, questions: quiz.questions.map((q) => (q.id === questionId ? { ...q, text } : q)) });
+    try { await updateQuestionText(questionId, text); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handlePreMessagesChange = async (questionId: string, preMessages: string[]) => {
-    setQuiz({
-      ...quiz,
-      questions: quiz.questions.map((q) => (q.id === questionId ? { ...q, pre_messages: preMessages } : q)),
-    });
-    try {
-      await updateQuestionPreMessages(questionId, preMessages);
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    setQuiz({ ...quiz, questions: quiz.questions.map((q) => (q.id === questionId ? { ...q, pre_messages: preMessages } : q)) });
+    try { await updateQuestionPreMessages(questionId, preMessages); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleOptionLabelChange = async (questionId: string, optionId: string, label: string) => {
     setQuiz({
       ...quiz,
       questions: quiz.questions.map((q) =>
-        q.id === questionId
-          ? { ...q, options: q.options.map((o) => (o.id === optionId ? { ...o, label } : o)) }
-          : q
+        q.id === questionId ? { ...q, options: q.options.map((o) => (o.id === optionId ? { ...o, label } : o)) } : q
       ),
     });
-    try {
-      await updateOption(optionId, { label });
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    try { await updateOption(optionId, { label }); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleOptionNextChange = async (questionId: string, optionId: string, nextQuestionId: string | null) => {
     setQuiz({
       ...quiz,
       questions: quiz.questions.map((q) =>
-        q.id === questionId
-          ? { ...q, options: q.options.map((o) => (o.id === optionId ? { ...o, next_question_id: nextQuestionId } : o)) }
-          : q
+        q.id === questionId ? { ...q, options: q.options.map((o) => (o.id === optionId ? { ...o, next_question_id: nextQuestionId } : o)) } : q
       ),
     });
-    try {
-      await updateOption(optionId, { next_question_id: nextQuestionId });
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    try { await updateOption(optionId, { next_question_id: nextQuestionId }); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
+  };
+
+  const handleConnectionChange = async (optionId: string, nextQuestionId: string | null) => {
+    // Find the question that owns this option
+    const ownerQ = quiz.questions.find((q) => q.options.some((o) => o.id === optionId));
+    if (ownerQ) {
+      await handleOptionNextChange(ownerQ.id, optionId, nextQuestionId);
     }
   };
 
@@ -157,18 +147,12 @@ const QuizBuilder = () => {
       const newQ = await addQuestion(quiz.id, quiz.questions.length);
       await loadQuiz();
       setSelectedQuestionId(newQ.id);
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleAddOption = async (questionId: string) => {
-    try {
-      await addOption(questionId);
-      await loadQuiz();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    try { await addOption(questionId); await loadQuiz(); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
@@ -180,9 +164,7 @@ const QuizBuilder = () => {
       await deleteQuestion(questionId);
       if (selectedQuestionId === questionId) setSelectedQuestionId(null);
       await loadQuiz();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleDeleteOption = async (questionId: string, optionId: string) => {
@@ -191,12 +173,8 @@ const QuizBuilder = () => {
       toast({ title: "Erro", description: "Precisa ter pelo menos uma opção.", variant: "destructive" });
       return;
     }
-    try {
-      await deleteOption(optionId);
-      await loadQuiz();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
+    try { await deleteOption(optionId); await loadQuiz(); }
+    catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   const handleCopyLink = () => {
@@ -205,22 +183,15 @@ const QuizBuilder = () => {
     toast({ title: "Link copiado!" });
   };
 
-  const getQuestionLabel = (qId: string) => {
-    const idx = quiz.questions.findIndex((q) => q.id === qId);
-    return idx >= 0 ? `P${idx + 1}` : "?";
-  };
-
-  const connections = quiz.questions.flatMap((q) =>
-    q.options
-      .filter((o) => o.next_question_id)
-      .map((o) => ({ fromQuestionId: q.id, toQuestionId: o.next_question_id! }))
-  );
-
   const selectedQuestion = quiz.questions.find((q) => q.id === selectedQuestionId);
+
+  /* ── Determine which overlay panel is open ── */
+  const showSidePanel = selectedQuestion || showThemePicker || showEndScreenEditor;
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      <header className="shrink-0 border-b border-border bg-card">
+      {/* Header */}
+      <header className="shrink-0 border-b border-border bg-card z-10">
         <div className="flex items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
@@ -234,11 +205,27 @@ const QuizBuilder = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => { setShowThemePicker(!showThemePicker); setShowEndScreenEditor(false); }}>
+            <Button
+              variant={showThemePicker ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => {
+                setShowThemePicker(!showThemePicker);
+                setShowEndScreenEditor(false);
+                setSelectedQuestionId(null);
+              }}
+            >
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Tema</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => { setShowEndScreenEditor(!showEndScreenEditor); setShowThemePicker(false); }}>
+            <Button
+              variant={showEndScreenEditor ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => {
+                setShowEndScreenEditor(!showEndScreenEditor);
+                setShowThemePicker(false);
+                setSelectedQuestionId(null);
+              }}
+            >
               <PartyPopper className="h-4 w-4" />
               <span className="hidden sm:inline">Tela Final</span>
             </Button>
@@ -255,140 +242,77 @@ const QuizBuilder = () => {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Flow View */}
-        <div className="flex-1 overflow-auto p-6">
-          <div className="mx-auto max-w-xl space-y-3">
-            {showThemePicker && (
-              <div className="mb-4 rounded-card bg-card p-4 shadow-card space-y-5">
-                <div>
-                  <h3 className="mb-3 text-sm font-medium text-foreground">Tema do Chat</h3>
-                  <ThemePicker
-                    selectedTheme={quiz.theme || "dark-social"}
-                    onSelectTheme={handleThemeChange}
-                  />
-                </div>
-
-                {/* Avatar & Badge */}
-                <div className="border-t border-border pt-4">
-                  <h3 className="mb-3 text-sm font-medium text-foreground">Avatar e Verificação</h3>
-                  <div className="flex items-center gap-4">
-                    <label className="group relative cursor-pointer">
-                      <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-border group-hover:ring-primary transition-colors">
-                        {quiz.avatar_url ? (
-                          <img src={quiz.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Foto</span>
-                        )}
-                      </div>
-                      <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-                      <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px]">+</span>
-                    </label>
-                    <div className="flex-1 space-y-1">
-                      <p className="text-xs text-muted-foreground">Clique para enviar uma foto de avatar</p>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={quiz.show_verified_badge}
-                          onChange={handleVerifiedToggle}
-                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                        />
-                        <span className="text-sm text-foreground">Mostrar selo de verificado ✓</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {showEndScreenEditor && (
-              <div className="mb-4 rounded-card bg-card p-4 shadow-card">
-                <h3 className="mb-3 text-sm font-medium text-foreground">Tela Final do Quiz</h3>
-                <EndScreenEditor
-                  config={{
-                    end_screen_template: quiz.end_screen_template || "congrats-green",
-                    end_screen_title: quiz.end_screen_title || "Você foi selecionada!",
-                    end_screen_subtitle: quiz.end_screen_subtitle || "Sua vaga está garantida",
-                    analysis_title: quiz.analysis_title || "ANALISANDO",
-                    analysis_subtitle: quiz.analysis_subtitle || "Sistema em processamento",
-                    show_analysis_card: quiz.show_analysis_card ?? true,
-                    show_congrats_card: quiz.show_congrats_card ?? true,
-                  }}
-                  onChange={handleEndScreenChange}
-                />
-              </div>
-            )}
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-medium text-muted-foreground">Fluxo do Quiz</h2>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {quiz.questions.length} {quiz.questions.length === 1 ? "pergunta" : "perguntas"}
-              </span>
-            </div>
-
-            {quiz.questions.map((question, qIndex) => (
-              <div key={question.id}>
-                <button
-                  onClick={() => setSelectedQuestionId(question.id === selectedQuestionId ? null : question.id)}
-                  className={`w-full text-left rounded-card p-4 transition-all duration-200 ${
-                    selectedQuestionId === question.id
-                      ? "bg-card shadow-card-hover ring-2 ring-primary"
-                      : "bg-card shadow-card hover:shadow-card-hover"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground tabular-nums">
-                      {qIndex + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate text-sm font-medium text-foreground">{question.text}</p>
-                        {question.is_start_node && (
-                          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                            Início
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {question.options.map((opt) => (
-                          <span
-                            key={opt.id}
-                            className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] text-muted-foreground"
-                          >
-                            {opt.label}
-                            <ChevronRight className="h-3 w-3" />
-                            <span className={`font-medium ${opt.next_question_id ? "text-primary" : "text-destructive/70"}`}>
-                              {opt.next_question_id ? getQuestionLabel(opt.next_question_id) : "Fim"}
-                            </span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-
-                {qIndex < quiz.questions.length - 1 && (
-                  <FlowConnections
-                    question={question}
-                    allQuestions={quiz.questions}
-                    currentIndex={qIndex}
-                  />
-                )}
-              </div>
-            ))}
-
-            <div className="flex justify-center pt-2">
-              <Button variant="outline" onClick={handleAddQuestion} className="rounded-card">
-                <Plus className="h-4 w-4" />
-                Adicionar pergunta
-              </Button>
-            </div>
-          </div>
+        {/* Flow Canvas */}
+        <div className="flex-1">
+          <FlowEditor
+            questions={quiz.questions}
+            selectedQuestionId={selectedQuestionId}
+            onSelectQuestion={(id) => {
+              setSelectedQuestionId(id);
+              if (id) {
+                setShowThemePicker(false);
+                setShowEndScreenEditor(false);
+              }
+            }}
+            onConnectionChange={handleConnectionChange}
+            onAddQuestion={handleAddQuestion}
+          />
         </div>
 
-        {/* Editor Panel */}
+        {/* Side Panel */}
         <div
           className={`border-l border-border bg-card transition-all duration-300 ease-out overflow-y-auto ${
-            selectedQuestion ? "w-[400px] opacity-100" : "w-0 opacity-0 overflow-hidden"
+            showSidePanel ? "w-[400px] opacity-100" : "w-0 opacity-0 overflow-hidden"
           }`}
         >
+          {showThemePicker && (
+            <div className="p-5 space-y-5">
+              <h3 className="text-sm font-medium text-foreground">Tema do Chat</h3>
+              <ThemePicker selectedTheme={quiz.theme || "dark-social"} onSelectTheme={handleThemeChange} />
+              <div className="border-t border-border pt-4">
+                <h3 className="mb-3 text-sm font-medium text-foreground">Avatar e Verificação</h3>
+                <div className="flex items-center gap-4">
+                  <label className="group relative cursor-pointer">
+                    <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-border group-hover:ring-primary transition-colors">
+                      {quiz.avatar_url ? (
+                        <img src={quiz.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Foto</span>
+                      )}
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                    <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px]">+</span>
+                  </label>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-xs text-muted-foreground">Clique para enviar uma foto de avatar</p>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={quiz.show_verified_badge} onChange={handleVerifiedToggle} className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                      <span className="text-sm text-foreground">Mostrar selo de verificado ✓</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showEndScreenEditor && (
+            <div className="p-5">
+              <h3 className="mb-3 text-sm font-medium text-foreground">Tela Final do Quiz</h3>
+              <EndScreenEditor
+                config={{
+                  end_screen_template: quiz.end_screen_template || "congrats-green",
+                  end_screen_title: quiz.end_screen_title || "Você foi selecionada!",
+                  end_screen_subtitle: quiz.end_screen_subtitle || "Sua vaga está garantida",
+                  analysis_title: quiz.analysis_title || "ANALISANDO",
+                  analysis_subtitle: quiz.analysis_subtitle || "Sistema em processamento",
+                  show_analysis_card: quiz.show_analysis_card ?? true,
+                  show_congrats_card: quiz.show_congrats_card ?? true,
+                }}
+                onChange={handleEndScreenChange}
+              />
+            </div>
+          )}
+
           {selectedQuestion && (
             <QuestionCard
               question={selectedQuestion}
