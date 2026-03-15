@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Link as LinkIcon, Eye, Palette, PartyPopper } from "lucide-react";
+import { ArrowLeft, Plus, Link as LinkIcon, Eye, Palette, PartyPopper, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getQuizFull,
