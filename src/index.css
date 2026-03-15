@@ -50,6 +50,14 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 142 70% 45%;
+
+    --chat-bg: 220 20% 10%;
+    --chat-header: 220 20% 13%;
+    --chat-bot: 217 90% 55%;
+    --chat-user: 220 15% 18%;
+    --chat-user-foreground: 0 0% 100%;
+    --chat-option: 220 15% 16%;
+    --chat-option-hover: 220 15% 22%;
   }
 }
 

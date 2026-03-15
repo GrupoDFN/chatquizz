@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getQuizFull, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -18,25 +18,39 @@ interface QuestionWithOptions {
 }
 
 const TypingIndicator = () => (
-  <div className="flex items-center gap-1 rounded-bubble rounded-tl-[4px] bg-card px-4 py-3 shadow-sm w-fit">
-    {[0, 1, 2].map((i) => (
-      <span
-        key={i}
-        className="block h-2 w-2 rounded-full bg-muted-foreground/40"
-        style={{ animation: "typing-bounce 1.4s infinite", animationDelay: `${i * 0.15}s` }}
-      />
-    ))}
+  <div className="flex items-start gap-3 self-start">
+    <div className="h-9 w-9 shrink-0" />
+    <div className="flex items-center gap-1 rounded-2xl rounded-tl bg-chat-bot px-4 py-3 shadow-sm w-fit">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="block h-2 w-2 rounded-full bg-white/40"
+          style={{ animation: "typing-bounce 1.4s infinite", animationDelay: `${i * 0.15}s` }}
+        />
+      ))}
+    </div>
   </div>
 );
 
-const BotBubble = ({ text }: { text: string }) => (
+const BotBubble = ({ text, avatarUrl, showAvatar }: { text: string; avatarUrl?: string; showAvatar: boolean }) => (
   <motion.div
     initial={{ opacity: 0, y: 10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     transition={{ duration: 0.3, ease: [0.2, 0, 0, 1] }}
-    className="max-w-[80%] self-start"
+    className="flex items-start gap-3 self-start max-w-[85%]"
   >
-    <div className="rounded-bubble rounded-tl-[4px] bg-card px-4 py-3 text-[15px] leading-relaxed text-foreground shadow-sm">
+    <div className="h-9 w-9 shrink-0">
+      {showAvatar && (
+        <div className="h-9 w-9 rounded-full bg-chat-bot flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            "Q"
+          )}
+        </div>
+      )}
+    </div>
+    <div className="rounded-2xl rounded-tl bg-chat-bot px-4 py-3 text-[15px] leading-relaxed text-white shadow-sm">
       {text}
     </div>
   </motion.div>
@@ -47,9 +61,9 @@ const UserBubble = ({ text }: { text: string }) => (
     initial={{ opacity: 0, y: 10, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     transition={{ duration: 0.3, ease: [0.2, 0, 0, 1] }}
-    className="max-w-[80%] self-end"
+    className="max-w-[75%] self-end"
   >
-    <div className="rounded-bubble rounded-tr-[4px] bg-primary px-4 py-3 text-[15px] leading-relaxed text-primary-foreground">
+    <div className="rounded-2xl rounded-tr bg-chat-user px-4 py-3 text-[15px] leading-relaxed text-chat-user-foreground border border-white/10">
       {text}
     </div>
   </motion.div>
@@ -131,38 +145,53 @@ const QuizChat = () => {
 
   if (notFound) {
     return (
-      <div className="flex h-svh items-center justify-center bg-background">
-        <p className="text-muted-foreground">Quiz não encontrado.</p>
+      <div className="flex h-svh items-center justify-center bg-chat-bg">
+        <p className="text-white/50">Quiz não encontrado.</p>
       </div>
     );
   }
 
   if (!quiz) {
     return (
-      <div className="flex h-svh items-center justify-center bg-background">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex h-svh items-center justify-center bg-chat-bg">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-chat-bot border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-svh flex-col bg-background">
-      <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
-          <MessageSquare className="h-4 w-4 text-primary-foreground" />
+    <div className="flex h-svh flex-col bg-chat-bg">
+      {/* Header */}
+      <header className="flex items-center gap-3 border-b border-white/10 bg-chat-header px-4 py-3">
+        <div className="relative">
+          <div className="h-11 w-11 rounded-full bg-chat-bot flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+            Q
+          </div>
+          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-chat-header" />
         </div>
         <div>
-          <p className="text-sm font-medium text-foreground">{quiz.title}</p>
-          <p className="text-[11px] text-muted-foreground">Online agora</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-[15px] font-semibold text-white">{quiz.title}</p>
+            <CheckCircle2 className="h-4 w-4 text-chat-bot fill-chat-bot stroke-white" />
+          </div>
+          <p className="text-[12px] text-white/50">Online agora</p>
         </div>
       </header>
 
+      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
         <div className="mx-auto flex max-w-[500px] flex-col gap-3">
           <AnimatePresence>
-            {messages.map((msg) =>
-              msg.type === "bot" ? <BotBubble key={msg.id} text={msg.text} /> : <UserBubble key={msg.id} text={msg.text} />
-            )}
+            {messages.map((msg, idx) => {
+              const showAvatar =
+                msg.type === "bot" &&
+                (idx === 0 || messages[idx - 1]?.type !== "bot");
+              return msg.type === "bot" ? (
+                <BotBubble key={msg.id} text={msg.text} showAvatar={showAvatar} />
+              ) : (
+                <UserBubble key={msg.id} text={msg.text} />
+              );
+            })}
           </AnimatePresence>
 
           {isTyping && <TypingIndicator />}
@@ -172,13 +201,13 @@ const QuizChat = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className="flex flex-col gap-2 w-full"
+              className="flex flex-col gap-2 w-full mt-1"
             >
               {currentQuestion.options.map((opt) => (
                 <button
                   key={opt.id}
                   onClick={() => handleOptionSelect(opt.id, opt.label)}
-                  className="w-full rounded-inner bg-card px-4 py-3.5 text-left text-sm font-medium text-foreground shadow-card transition-all duration-200 ease-out hover:shadow-card-hover hover:bg-secondary active:scale-[0.98]"
+                  className="w-full rounded-2xl bg-chat-option px-4 py-4 text-center text-[14px] font-medium text-white border border-white/10 transition-all duration-200 ease-out hover:bg-chat-option-hover active:scale-[0.98]"
                 >
                   {opt.label}
                 </button>
@@ -195,7 +224,7 @@ const QuizChat = () => {
             >
               <button
                 onClick={() => window.location.reload()}
-                className="rounded-inner bg-card px-6 py-3 text-sm font-medium text-foreground shadow-card transition-all hover:shadow-card-hover"
+                className="rounded-2xl bg-chat-bot px-6 py-3 text-sm font-medium text-white transition-all hover:brightness-110"
               >
                 Refazer quiz
               </button>
@@ -204,9 +233,10 @@ const QuizChat = () => {
         </div>
       </div>
 
-      <footer className="border-t border-border bg-card px-4 py-3 text-center">
-        <p className="text-[11px] text-muted-foreground">
-          Powered by <span className="font-medium text-primary">ChatQuiz</span>
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-chat-header px-4 py-3 text-center">
+        <p className="text-[11px] text-white/40">
+          Powered by <span className="font-medium text-chat-bot">ChatQuiz</span>
         </p>
       </footer>
     </div>
