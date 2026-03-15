@@ -1,5 +1,7 @@
+import { useRef, useState } from "react";
 import { Plus, Trash2, X, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import EmojiButton from "./EmojiButton";
 
 interface OptionData {
   id: string;
@@ -42,6 +44,7 @@ const QuestionCard = ({
   onClose,
 }: QuestionCardProps) => {
   const preMessages = question.pre_messages || [];
+  const questionTextRef = useRef<HTMLTextAreaElement>(null);
 
   const handleAddPreMessage = () => {
     onPreMessagesChange([...preMessages, ""]);
@@ -55,6 +58,21 @@ const QuestionCard = ({
 
   const handleDeletePreMessage = (index: number) => {
     onPreMessagesChange(preMessages.filter((_, i) => i !== index));
+  };
+
+  const insertEmojiAtCursor = (ref: HTMLTextAreaElement | HTMLInputElement | null, emoji: string, onChange: (val: string) => void, currentValue: string) => {
+    if (ref) {
+      const start = ref.selectionStart || currentValue.length;
+      const end = ref.selectionEnd || currentValue.length;
+      const newVal = currentValue.slice(0, start) + emoji + currentValue.slice(end);
+      onChange(newVal);
+      setTimeout(() => {
+        ref.focus();
+        ref.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 0);
+    } else {
+      onChange(currentValue + emoji);
+    }
   };
 
   return (
@@ -86,24 +104,13 @@ const QuestionCard = ({
         {preMessages.length > 0 && (
           <div className="space-y-2">
             {preMessages.map((msg, idx) => (
-              <div key={idx} className="flex items-start gap-2">
-                <span className="mt-2.5 text-[10px] font-medium text-muted-foreground shrink-0">{idx + 1}.</span>
-                <input
-                  type="text"
-                  value={msg}
-                  onChange={(e) => handleUpdatePreMessage(idx, e.target.value)}
-                  placeholder="Digite uma mensagem..."
-                  className="flex-1 rounded-inner bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeletePreMessage(idx)}
-                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
+              <PreMessageRow
+                key={idx}
+                index={idx}
+                value={msg}
+                onChange={(val) => handleUpdatePreMessage(idx, val)}
+                onDelete={() => handleDeletePreMessage(idx)}
+              />
             ))}
           </div>
         )}
@@ -114,8 +121,12 @@ const QuestionCard = ({
         )}
       </div>
 
-      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Texto da pergunta</label>
+      <div className="mb-1.5 flex items-center justify-between">
+        <label className="text-xs font-medium text-muted-foreground">Texto da pergunta</label>
+        <EmojiButton onSelect={(emoji) => insertEmojiAtCursor(questionTextRef.current, emoji, onTextChange, question.text)} />
+      </div>
       <textarea
+        ref={questionTextRef}
         value={question.text}
         onChange={(e) => onTextChange(e.target.value)}
         placeholder="Digite a pergunta..."
@@ -126,46 +137,16 @@ const QuestionCard = ({
       <label className="mb-2 block text-xs font-medium text-muted-foreground">Opções de resposta</label>
       <div className="space-y-3">
         {question.options.map((option, optIdx) => (
-          <div key={option.id} className="rounded-inner bg-secondary/50 p-3">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase">
-                Opção {String.fromCharCode(65 + optIdx)}
-              </span>
-              <div className="flex-1" />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDeleteOption(option.id)}
-                className="h-6 w-6 text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-            <input
-              type="text"
-              value={option.label}
-              onChange={(e) => onOptionLabelChange(option.id, e.target.value)}
-              placeholder="Texto da opção..."
-              className="mb-2 w-full rounded-sm bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
-            />
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-muted-foreground whitespace-nowrap">Ir para:</span>
-              <select
-                value={option.next_question_id || ""}
-                onChange={(e) => onOptionNextChange(option.id, e.target.value || null)}
-                className="w-full rounded-sm bg-card px-2 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">🏁 Fim do quiz</option>
-                {allQuestions
-                  .filter((q) => q.id !== question.id)
-                  .map((q) => (
-                    <option key={q.id} value={q.id}>
-                      → Pergunta {allQuestions.indexOf(q) + 1}: {q.text.substring(0, 30)}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          </div>
+          <OptionRow
+            key={option.id}
+            option={option}
+            optIdx={optIdx}
+            question={question}
+            allQuestions={allQuestions}
+            onOptionLabelChange={onOptionLabelChange}
+            onOptionNextChange={onOptionNextChange}
+            onDeleteOption={onDeleteOption}
+          />
         ))}
       </div>
 
@@ -184,6 +165,124 @@ const QuestionCard = ({
           <Trash2 className="h-3 w-3" />
           Excluir pergunta
         </Button>
+      </div>
+    </div>
+  );
+};
+
+// Sub-components to hold their own refs
+
+const PreMessageRow = ({ index, value, onChange, onDelete }: { index: number; value: string; onChange: (val: string) => void; onDelete: () => void }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const insertEmoji = (emoji: string) => {
+    const el = inputRef.current;
+    if (el) {
+      const start = el.selectionStart || value.length;
+      const end = el.selectionEnd || value.length;
+      const newVal = value.slice(0, start) + emoji + value.slice(end);
+      onChange(newVal);
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 0);
+    } else {
+      onChange(value + emoji);
+    }
+  };
+
+  return (
+    <div className="flex items-start gap-2">
+      <span className="mt-2.5 text-[10px] font-medium text-muted-foreground shrink-0">{index + 1}.</span>
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Digite uma mensagem..."
+        className="flex-1 rounded-inner bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
+      />
+      <EmojiButton onSelect={insertEmoji} />
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onDelete}
+        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+      >
+        <Trash2 className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+};
+
+const OptionRow = ({ option, optIdx, question, allQuestions, onOptionLabelChange, onOptionNextChange, onDeleteOption }: {
+  option: { id: string; label: string; next_question_id: string | null };
+  optIdx: number;
+  question: { id: string };
+  allQuestions: { id: string; text: string }[];
+  onOptionLabelChange: (optionId: string, label: string) => void;
+  onOptionNextChange: (optionId: string, nextId: string | null) => void;
+  onDeleteOption: (optionId: string) => void;
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const insertEmoji = (emoji: string) => {
+    const el = inputRef.current;
+    const val = option.label;
+    if (el) {
+      const start = el.selectionStart || val.length;
+      const end = el.selectionEnd || val.length;
+      onOptionLabelChange(option.id, val.slice(0, start) + emoji + val.slice(end));
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 0);
+    } else {
+      onOptionLabelChange(option.id, val + emoji);
+    }
+  };
+
+  return (
+    <div className="rounded-inner bg-secondary/50 p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-[10px] font-medium text-muted-foreground uppercase">
+          Opção {String.fromCharCode(65 + optIdx)}
+        </span>
+        <div className="flex-1" />
+        <EmojiButton onSelect={insertEmoji} />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDeleteOption(option.id)}
+          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
+      <input
+        ref={inputRef}
+        type="text"
+        value={option.label}
+        onChange={(e) => onOptionLabelChange(option.id, e.target.value)}
+        placeholder="Texto da opção..."
+        className="mb-2 w-full rounded-sm bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+      />
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground whitespace-nowrap">Ir para:</span>
+        <select
+          value={option.next_question_id || ""}
+          onChange={(e) => onOptionNextChange(option.id, e.target.value || null)}
+          className="w-full rounded-sm bg-card px-2 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">🏁 Fim do quiz</option>
+          {allQuestions
+            .filter((q) => q.id !== question.id)
+            .map((q) => (
+              <option key={q.id} value={q.id}>
+                → Pergunta {allQuestions.indexOf(q) + 1}: {q.text.substring(0, 30)}
+              </option>
+            ))}
+        </select>
       </div>
     </div>
   );
