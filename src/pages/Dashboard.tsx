@@ -192,7 +192,7 @@ const Dashboard = () => {
           </div>
         ) : quizzes.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-card bg-card p-12 shadow-card">
-            <MessageSquare className="mb-4 h-12 w-12 text-muted-foreground/40" />
+            <img src={chatFunnelLogo} alt="ChatFunnel" className="mb-4 h-12 opacity-40" />
             <p className="mb-2 text-base font-medium text-foreground">Nenhum quiz ainda</p>
             <p className="mb-6 text-sm text-muted-foreground">Crie seu primeiro quiz conversacional</p>
             <Button onClick={() => setShowNewDialog(true)}>
