@@ -314,7 +314,16 @@ const QuizBuilder = () => {
             </div>
           )}
 
-          {selectedQuestion && (
+          {selectedQuestion && (selectedQuestion as any).type === "text" ? (
+            <TextCard
+              questionId={selectedQuestion.id}
+              text={selectedQuestion.text}
+              questionIndex={quiz.questions.indexOf(selectedQuestion)}
+              onTextChange={(text) => handleQuestionTextChange(selectedQuestion.id, text)}
+              onDeleteQuestion={() => handleDeleteQuestion(selectedQuestion.id)}
+              onClose={() => setSelectedQuestionId(null)}
+            />
+          ) : selectedQuestion ? (
             <QuestionCard
               question={selectedQuestion}
               questionIndex={quiz.questions.indexOf(selectedQuestion)}
@@ -333,7 +342,7 @@ const QuizBuilder = () => {
               onDeleteQuestion={() => handleDeleteQuestion(selectedQuestion.id)}
               onClose={() => setSelectedQuestionId(null)}
             />
-          )}
+          ) : null}
         </div>
       </div>
     </div>
