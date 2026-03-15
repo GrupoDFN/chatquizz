@@ -29,7 +29,7 @@ const Login = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <img src={chatFunnelLogo} alt="ChatFunnel" className="mx-auto mb-4 w-64" />
+          <img src={chatFunnelLogo} alt="ChatFunnel" className="mx-auto mb-2" style={{ width: '265px' }} />
           <p className="mt-1 text-sm text-muted-foreground">Entre na sua conta</p>
         </div>
 
