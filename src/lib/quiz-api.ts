@@ -14,6 +14,7 @@ export interface QuizRow {
   analysis_subtitle: string;
   show_analysis_card: boolean;
   show_congrats_card: boolean;
+  response_delay: number;
   created_at: string;
 }
 
