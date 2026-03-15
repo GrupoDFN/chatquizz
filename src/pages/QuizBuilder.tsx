@@ -63,6 +63,29 @@ const QuizBuilder = () => {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = await uploadAvatar(quiz.id, file);
+      await updateQuizAvatar(quiz.id, url);
+      setQuiz({ ...quiz, avatar_url: url });
+      toast({ title: "Avatar atualizado!" });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleVerifiedToggle = async () => {
+    const newVal = !quiz.show_verified_badge;
+    setQuiz({ ...quiz, show_verified_badge: newVal });
+    try {
+      await updateQuizVerifiedBadge(quiz.id, newVal);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleQuestionTextChange = async (questionId: string, text: string) => {
     setQuiz({
       ...quiz,
