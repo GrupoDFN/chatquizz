@@ -59,6 +59,7 @@ export type Database = {
           id: string
           is_start_node: boolean
           order: number
+          pre_messages: string[]
           quiz_id: string
           text: string
         }
@@ -67,6 +68,7 @@ export type Database = {
           id?: string
           is_start_node?: boolean
           order?: number
+          pre_messages?: string[]
           quiz_id: string
           text: string
         }
@@ -75,6 +77,7 @@ export type Database = {
           id?: string
           is_start_node?: boolean
           order?: number
+          pre_messages?: string[]
           quiz_id?: string
           text?: string
         }

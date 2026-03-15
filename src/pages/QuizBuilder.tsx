@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2, Link as LinkIcon, Eye, ChevronRight, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuizAvatar, updateQuizVerifiedBadge, uploadAvatar, updateQuestionText, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuizAvatar, updateQuizVerifiedBadge, uploadAvatar, updateQuestionText, updateQuestionPreMessages, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
 import { toast } from "@/hooks/use-toast";
 import ThemePicker from "@/components/builder/ThemePicker";
 import QuestionCard from "@/components/builder/QuestionCard";
@@ -93,6 +93,18 @@ const QuizBuilder = () => {
     });
     try {
       await updateQuestionText(questionId, text);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handlePreMessagesChange = async (questionId: string, preMessages: string[]) => {
+    setQuiz({
+      ...quiz,
+      questions: quiz.questions.map((q) => (q.id === questionId ? { ...q, pre_messages: preMessages } : q)),
+    });
+    try {
+      await updateQuestionPreMessages(questionId, preMessages);
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
@@ -354,8 +366,10 @@ const QuizBuilder = () => {
                 id: q.id,
                 text: q.text,
                 options: q.options,
+                pre_messages: q.pre_messages,
               }))}
               onTextChange={(text) => handleQuestionTextChange(selectedQuestion.id, text)}
+              onPreMessagesChange={(preMessages) => handlePreMessagesChange(selectedQuestion.id, preMessages)}
               onOptionLabelChange={(optionId, label) => handleOptionLabelChange(selectedQuestion.id, optionId, label)}
               onOptionNextChange={(optionId, nextId) => handleOptionNextChange(selectedQuestion.id, optionId, nextId)}
               onAddOption={() => handleAddOption(selectedQuestion.id)}

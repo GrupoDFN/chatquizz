@@ -16,6 +16,7 @@ export interface QuestionRow {
   text: string;
   order: number;
   is_start_node: boolean;
+  pre_messages: string[];
   created_at: string;
 }
 
@@ -162,6 +163,12 @@ export async function addQuestion(quizId: string, order: number): Promise<Questi
 // Update question text
 export async function updateQuestionText(questionId: string, text: string): Promise<void> {
   const { error } = await supabase.from("questions").update({ text }).eq("id", questionId);
+  if (error) throw error;
+}
+
+// Update question pre-messages
+export async function updateQuestionPreMessages(questionId: string, preMessages: string[]): Promise<void> {
+  const { error } = await supabase.from("questions").update({ pre_messages: preMessages } as any).eq("id", questionId);
   if (error) throw error;
 }
 
