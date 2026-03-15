@@ -73,7 +73,7 @@ const UserBubble = ({ text, theme }: { text: string; theme: ChatTheme }) => (
 );
 
 /* ── Analysis Card ── */
-const AnalysisCard = () => {
+const AnalysisCard = ({ title, subtitle }: { title: string; subtitle: string }) => {
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState("Iniciando análise...");
 
@@ -110,12 +110,11 @@ const AnalysisCard = () => {
             <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-[#1a2235]" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white tracking-wide">ANALISANDO</p>
-            <p className="text-[11px] text-white/50">Sistema em processamento</p>
+            <p className="text-sm font-bold text-white tracking-wide">{title}</p>
+            <p className="text-[11px] text-white/50">{subtitle}</p>
           </div>
         </div>
 
-        {/* Progress bar */}
         <div className="h-2 w-full rounded-full bg-[#0d1525] overflow-hidden mb-3">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400"
@@ -133,7 +132,6 @@ const AnalysisCard = () => {
           <span className="text-[13px] font-bold text-blue-400 tabular-nums">{progress}%</span>
         </div>
 
-        {/* Dots */}
         <div className="flex items-center justify-center gap-1.5 mt-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <motion.span
