@@ -209,6 +209,15 @@ const QuizBuilder = () => {
         {/* Flow View */}
         <div className="flex-1 overflow-auto p-6">
           <div className="mx-auto max-w-xl space-y-3">
+            {showThemePicker && (
+              <div className="mb-4 rounded-card bg-card p-4 shadow-card">
+                <h3 className="mb-3 text-sm font-medium text-foreground">Tema do Chat</h3>
+                <ThemePicker
+                  selectedTheme={quiz.theme || "dark-social"}
+                  onSelectTheme={handleThemeChange}
+                />
+              </div>
+            )}
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-medium text-muted-foreground">Fluxo do Quiz</h2>
               <span className="text-xs tabular-nums text-muted-foreground">
