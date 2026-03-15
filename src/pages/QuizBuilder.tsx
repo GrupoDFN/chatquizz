@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Link as LinkIcon, Eye, ChevronRight, Palette } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Link as LinkIcon, Eye, ChevronRight, Palette, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuizAvatar, updateQuizVerifiedBadge, uploadAvatar, updateQuestionText, updateQuestionPreMessages, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import { getQuizFull, updateQuizTitle, updateQuizTheme, updateQuizAvatar, updateQuizVerifiedBadge, updateQuizEndScreen, uploadAvatar, updateQuestionText, updateQuestionPreMessages, addQuestion, addOption, updateOption, deleteQuestion, deleteOption, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
 import { toast } from "@/hooks/use-toast";
 import ThemePicker from "@/components/builder/ThemePicker";
 import QuestionCard from "@/components/builder/QuestionCard";
 import FlowConnections from "@/components/builder/FlowConnections";
+import EndScreenEditor from "@/components/builder/EndScreenEditor";
 
 const QuizBuilder = () => {
   const { id } = useParams<{ id: string }>();
