@@ -49,6 +49,11 @@ interface FlowEditorProps {
   onAddCard: (type: "question" | "text") => void;
   onOpenAnalysis: () => void;
   onOpenCongrats: () => void;
+  showAnalysisCard?: boolean;
+  showCongratsCard?: boolean;
+  analysisTitle?: string;
+  endScreenTitle?: string;
+  activeEndPanel?: "analysis" | "congrats" | null;
 }
 
 /* ─── End Node ─── */
