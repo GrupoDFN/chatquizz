@@ -93,27 +93,48 @@ export type Database = {
       }
       quizzes: {
         Row: {
+          analysis_subtitle: string
+          analysis_title: string
           avatar_url: string | null
           created_at: string
+          end_screen_subtitle: string
+          end_screen_template: string
+          end_screen_title: string
           id: string
+          show_analysis_card: boolean
+          show_congrats_card: boolean
           show_verified_badge: boolean
           theme: string
           title: string
           user_id: string
         }
         Insert: {
+          analysis_subtitle?: string
+          analysis_title?: string
           avatar_url?: string | null
           created_at?: string
+          end_screen_subtitle?: string
+          end_screen_template?: string
+          end_screen_title?: string
           id?: string
+          show_analysis_card?: boolean
+          show_congrats_card?: boolean
           show_verified_badge?: boolean
           theme?: string
           title: string
           user_id: string
         }
         Update: {
+          analysis_subtitle?: string
+          analysis_title?: string
           avatar_url?: string | null
           created_at?: string
+          end_screen_subtitle?: string
+          end_screen_template?: string
+          end_screen_title?: string
           id?: string
+          show_analysis_card?: boolean
+          show_congrats_card?: boolean
           show_verified_badge?: boolean
           theme?: string
           title?: string
