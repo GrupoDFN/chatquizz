@@ -247,6 +247,10 @@ const QuizBuilder = () => {
               <LinkIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Link</span>
             </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/leads/${quiz.id}`)}>
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Leads</span>
+            </Button>
             <Button size="sm" onClick={() => navigate(`/quiz/${quiz.id}`)}>
               <Eye className="h-4 w-4" />
               <span className="hidden sm:inline">Preview</span>
