@@ -260,8 +260,15 @@ const QuizChat = () => {
       setTimeout(() => {
         setIsTyping(false);
         addMsg("bot", question.text);
-        setCurrentQuestion(question);
-        setTimeout(() => setShowOptions(true), 200);
+
+        // If all options point to end (null), auto-trigger end sequence
+        const allOptionsEnd = question.options.length > 0 && question.options.every((o) => !o.next_question_id);
+        if (allOptionsEnd || question.options.length === 0) {
+          setTimeout(() => showEndSequence(), 800);
+        } else {
+          setCurrentQuestion(question);
+          setTimeout(() => setShowOptions(true), 200);
+        }
       }, 600 + Math.random() * 400);
     });
   }, [addMsg]);
