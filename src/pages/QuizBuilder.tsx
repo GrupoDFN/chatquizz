@@ -255,7 +255,7 @@ const QuizBuilder = () => {
               }
             }}
             onConnectionChange={handleConnectionChange}
-            onAddQuestion={handleAddQuestion}
+            onAddCard={handleAddCard}
           />
         </div>
 
