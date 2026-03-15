@@ -126,7 +126,7 @@ function TextNode({ data, selected }: NodeProps) {
         selected ? "border-accent shadow-lg ring-2 ring-accent/20" : "border-border"
       }`}
     >
-      <Handle type="target" position={Position.Left} className="!h-3 !w-3 !bg-accent !border-accent/40" />
+      <Handle type="target" position={Position.Left} className="!h-3.5 !w-3.5 !bg-primary !border-primary/40" />
 
       <div className="flex items-center gap-2 px-4 pt-3 pb-2">
         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground">
@@ -145,7 +145,7 @@ function TextNode({ data, selected }: NodeProps) {
             type="source"
             position={Position.Right}
             id="text-output"
-            className="!h-2.5 !w-2.5 !bg-accent/70 !border-accent/30 !right-[-5px]"
+            className="!h-3.5 !w-3.5 !bg-primary/80 !border-primary/40 !right-[-6px]"
             style={{ top: "auto" }}
           />
         </div>
@@ -210,8 +210,8 @@ export default function FlowEditor({
             sourceHandle: "text-output",
             target: firstOpt.next_question_id,
             type: "smoothstep",
-            style: { stroke: "hsl(var(--accent))", strokeWidth: 2 },
-            markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--accent))" },
+            style: { stroke: "hsl(var(--primary))", strokeWidth: 2, strokeDasharray: "4 3" },
+            markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--primary))" },
           });
         }
       } else {
