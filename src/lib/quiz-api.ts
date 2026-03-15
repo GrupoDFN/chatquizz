@@ -122,6 +122,28 @@ export async function updateQuizTheme(quizId: string, theme: string): Promise<vo
   if (error) throw error;
 }
 
+// Update quiz avatar
+export async function updateQuizAvatar(quizId: string, avatarUrl: string | null): Promise<void> {
+  const { error } = await supabase.from("quizzes").update({ avatar_url: avatarUrl }).eq("id", quizId);
+  if (error) throw error;
+}
+
+// Update quiz verified badge
+export async function updateQuizVerifiedBadge(quizId: string, show: boolean): Promise<void> {
+  const { error } = await supabase.from("quizzes").update({ show_verified_badge: show }).eq("id", quizId);
+  if (error) throw error;
+}
+
+// Upload avatar image
+export async function uploadAvatar(quizId: string, file: File): Promise<string> {
+  const ext = file.name.split(".").pop();
+  const path = `${quizId}/avatar.${ext}`;
+  const { error } = await supabase.storage.from("quiz-avatars").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("quiz-avatars").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 // Add a question to a quiz
 export async function addQuestion(quizId: string, order: number): Promise<QuestionRow> {
   const { data, error } = await supabase
