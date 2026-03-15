@@ -91,16 +91,16 @@ export default function ShareDialog({ quizId, quizTitle, open, onClose }: ShareD
       }
 
       if (mode === "copy") {
-        // Duplicate the quiz for the target user
-        await duplicateQuiz(quizId, profile.id);
-        // Also record the share for tracking
-        await supabase.from("quiz_shares").upsert({
+        // Just record the share — recipient will auto-duplicate on next dashboard load
+        const { error } = await supabase.from("quiz_shares").upsert({
           quiz_id: quizId,
           owner_id: user.id,
           shared_with_user_id: profile.id,
           permission: "copy",
-        }, { onConflict: "quiz_id,shared_with_user_id" });
-        toast({ title: "Cópia enviada!", description: `Uma cópia do funil foi criada para ${profile.email}.` });
+          fulfilled: false,
+        } as any, { onConflict: "quiz_id,shared_with_user_id" });
+        if (error) throw error;
+        toast({ title: "Cópia enviada!", description: `${profile.email} receberá uma cópia ao acessar o dashboard.` });
       } else {
         // Share with edit permission
         const { error } = await supabase.from("quiz_shares").upsert({
