@@ -166,6 +166,12 @@ export async function updateQuestionText(questionId: string, text: string): Prom
   if (error) throw error;
 }
 
+// Update question pre-messages
+export async function updateQuestionPreMessages(questionId: string, preMessages: string[]): Promise<void> {
+  const { error } = await supabase.from("questions").update({ pre_messages: preMessages } as any).eq("id", questionId);
+  if (error) throw error;
+}
+
 // Delete a question
 export async function deleteQuestion(questionId: string): Promise<void> {
   // Clear references to this question in other options
