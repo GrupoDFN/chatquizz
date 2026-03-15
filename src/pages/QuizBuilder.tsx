@@ -249,6 +249,7 @@ const QuizBuilder = () => {
         {/* Flow Canvas */}
         <div className="flex-1">
           <FlowEditor
+            quizId={quiz.id}
             questions={quiz.questions}
             selectedQuestionId={selectedQuestionId}
             showAnalysisCard={quiz.show_analysis_card ?? true}
