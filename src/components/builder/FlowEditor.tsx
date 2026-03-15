@@ -145,7 +145,7 @@ function TextNode({ data, selected }: NodeProps) {
             type="source"
             position={Position.Right}
             id="text-output"
-            className="!h-2.5 !w-2.5 !bg-accent/70 !border-accent/30 !right-[-5px]"
+            className="!h-3.5 !w-3.5 !bg-primary/80 !border-primary/40 !right-[-6px]"
             style={{ top: "auto" }}
           />
         </div>
