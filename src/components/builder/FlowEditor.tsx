@@ -42,6 +42,7 @@ interface QuestionData {
 }
 
 interface FlowEditorProps {
+  quizId: string;
   questions: QuestionData[];
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string | null) => void;
@@ -60,6 +61,38 @@ interface FlowEditorProps {
 const END_NODE_ID = "__end__";
 const ANALYSIS_NODE_ID = "__analysis__";
 const CONGRATS_NODE_ID = "__congrats__";
+const SPECIAL_IDS = [END_NODE_ID, ANALYSIS_NODE_ID, CONGRATS_NODE_ID];
+
+interface PersistedSpecialEdge {
+  id: string;
+  source: string;
+  sourceHandle?: string | null;
+  target: string;
+  targetHandle?: string | null;
+}
+
+interface PersistedFlowLayout {
+  positions: Record<string, { x: number; y: number }>;
+  specialEdges: PersistedSpecialEdge[];
+}
+
+const buildSpecialEdgeId = (connection: Connection) =>
+  `special-${connection.source ?? ""}-${connection.sourceHandle ?? "default"}-${connection.target ?? ""}-${connection.targetHandle ?? "default"}`;
+
+const createSpecialEdge = (connection: Connection): Edge | null => {
+  if (!connection.source || !connection.target) return null;
+
+  return {
+    id: buildSpecialEdgeId(connection),
+    source: connection.source,
+    sourceHandle: connection.sourceHandle,
+    target: connection.target,
+    targetHandle: connection.targetHandle,
+    type: "smoothstep",
+    style: { stroke: "hsl(var(--accent-foreground) / 0.55)", strokeWidth: 2, strokeDasharray: "5 3" },
+    markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--accent-foreground) / 0.55)" },
+  };
+};
 
 function EndNode() {
   return (
