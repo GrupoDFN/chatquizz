@@ -15,7 +15,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Flag, Plus, MessageSquare, HelpCircle } from "lucide-react";
+import { Flag, Plus, MessageSquare, HelpCircle, BarChart3, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
