@@ -135,19 +135,15 @@ export default function FlowEditor({
       },
     }));
 
-    // Check if any option points to null (end)
-    const hasEnd = questions.some((q) => q.options.some((o) => !o.next_question_id));
-
-    if (hasEnd) {
-      qNodes.push({
-        id: END_NODE_ID,
-        type: "end",
-        position: { x: 600, y: (questions.length - 1) * 200 + 100 },
-        data: {},
-        selectable: false,
-        draggable: true,
-      });
-    }
+    // Always show the End node so users can freely connect to it
+    qNodes.push({
+      id: END_NODE_ID,
+      type: "end",
+      position: { x: 600, y: (questions.length - 1) * 200 + 100 },
+      data: {},
+      selectable: false,
+      draggable: true,
+    });
 
     return qNodes;
   }, [questions, selectedQuestionId]);
@@ -158,10 +154,6 @@ export default function FlowEditor({
     questions.forEach((q) => {
       q.options.forEach((opt) => {
         const target = opt.next_question_id || END_NODE_ID;
-        // Only create edge to END if end node exists
-        if (target === END_NODE_ID && !questions.some((qq) => qq.options.some((o) => !o.next_question_id))) {
-          return;
-        }
         edges.push({
           id: `e-${opt.id}`,
           source: q.id,
