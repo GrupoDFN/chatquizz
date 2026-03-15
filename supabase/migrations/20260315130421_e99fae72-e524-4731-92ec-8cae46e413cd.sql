@@ -1,0 +1,1 @@
+ALTER TABLE public.questions ADD COLUMN pre_messages text[] NOT NULL DEFAULT '{}';
