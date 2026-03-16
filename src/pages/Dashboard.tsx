@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, LogOut, MoreVertical, Pencil, Eye, Copy, Share2, Trash2, BarChart3 } from "lucide-react";
+import { Plus, LogOut, MoreVertical, Pencil, Eye, Copy, Share2, Trash2, BarChart3, Link } from "lucide-react";
 import chatFunnelLogo from "@/assets/logo-chatfunnel.png";
 import { Button } from "@/components/ui/button";
 import {
@@ -237,6 +237,10 @@ const Dashboard = () => {
                       <DropdownMenuItem onClick={() => window.open(`/quiz/${quiz.id}`, "_blank")}>
                         <Eye className="mr-2 h-4 w-4" />
                         Visualizar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleCopyLink(quiz.id)}>
+                        <Link className="mr-2 h-4 w-4" />
+                        Copiar Link do Funil
                       </DropdownMenuItem>
                       {!quiz.isCopy && (
                         <>
