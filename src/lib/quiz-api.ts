@@ -69,6 +69,21 @@ export async function getUserQuizzes(): Promise<QuizRow[]> {
   return data ?? [];
 }
 
+// Resolve a quiz ID from either a UUID or a slug
+export async function resolveQuizId(idOrSlug: string): Promise<string | null> {
+  // If it looks like a UUID, return as-is
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(idOrSlug)) return idOrSlug;
+
+  // Otherwise try to find by slug
+  const { data } = await supabase
+    .from("quizzes")
+    .select("id")
+    .eq("slug", idOrSlug)
+    .maybeSingle();
+  return (data as any)?.id ?? null;
+}
+
 // Fetch a single quiz with all questions and options
 export async function getQuizFull(quizId: string): Promise<QuizWithQuestionsAndOptions | null> {
   const { data: quiz, error: qErr } = await supabase
