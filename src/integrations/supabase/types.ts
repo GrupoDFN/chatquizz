@@ -279,6 +279,7 @@ export type Database = {
           show_analysis_card: boolean
           show_congrats_card: boolean
           show_verified_badge: boolean
+          slug: string | null
           theme: string
           title: string
           user_id: string
@@ -297,6 +298,7 @@ export type Database = {
           show_analysis_card?: boolean
           show_congrats_card?: boolean
           show_verified_badge?: boolean
+          slug?: string | null
           theme?: string
           title: string
           user_id: string
@@ -315,6 +317,7 @@ export type Database = {
           show_analysis_card?: boolean
           show_congrats_card?: boolean
           show_verified_badge?: boolean
+          slug?: string | null
           theme?: string
           title?: string
           user_id?: string
