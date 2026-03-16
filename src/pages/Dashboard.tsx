@@ -240,10 +240,6 @@ const Dashboard = () => {
                         <Eye className="mr-2 h-4 w-4" />
                         Visualizar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleCopyLink(quiz.id)}>
-                        <Link className="mr-2 h-4 w-4" />
-                        Copiar Link do Funil
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setLinkQuiz({ id: quiz.id, title: quiz.title })}>
                         <Share2 className="mr-2 h-4 w-4" />
                         Compartilhar Link
