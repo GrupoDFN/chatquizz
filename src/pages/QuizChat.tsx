@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { getQuizFull, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import { getQuizFull, resolveQuizId, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
 import { trackQuizView, trackQuizResponse } from "@/lib/quiz-tracking";
 import { getThemeById, ChatTheme } from "@/lib/chat-themes";
 import { getEndScreenTemplate } from "@/lib/end-screen-templates";
@@ -329,21 +329,33 @@ const QuizChat = () => {
 
   useEffect(() => {
     if (!id) return;
-    // Generate or retrieve session ID
-    const storageKey = `quiz_session_${id}`;
-    let sid = sessionStorage.getItem(storageKey);
-    if (!sid) {
-      sid = crypto.randomUUID().slice(0, 8).toUpperCase();
-      sessionStorage.setItem(storageKey, sid);
-    }
-    sessionId.current = sid;
 
-    getQuizFull(id).then((data) => {
-      if (data) {
-        setQuiz(data);
-        trackQuizView(id, sid!);
-      } else setNotFound(true);
-    }).catch(() => setNotFound(true));
+    const loadQuiz = async () => {
+      try {
+        const resolvedId = await resolveQuizId(id);
+        if (!resolvedId) { setNotFound(true); return; }
+
+        const storageKey = `quiz_session_${resolvedId}`;
+        let sid = sessionStorage.getItem(storageKey);
+        if (!sid) {
+          sid = crypto.randomUUID().slice(0, 8).toUpperCase();
+          sessionStorage.setItem(storageKey, sid);
+        }
+        sessionId.current = sid;
+
+        const data = await getQuizFull(resolvedId);
+        if (data) {
+          setQuiz(data);
+          trackQuizView(resolvedId, sid);
+        } else {
+          setNotFound(true);
+        }
+      } catch {
+        setNotFound(true);
+      }
+    };
+
+    loadQuiz();
   }, [id]);
 
   useEffect(() => {

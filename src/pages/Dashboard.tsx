@@ -15,6 +15,7 @@ import { getUserQuizzes, createQuiz, deleteQuiz, duplicateQuiz } from "@/lib/qui
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ShareDialog from "@/components/ShareDialog";
+import LinkShareDialog from "@/components/LinkShareDialog";
 
 interface QuizRow {
   id: string;
@@ -32,6 +33,7 @@ const Dashboard = () => {
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
   const [shareQuiz, setShareQuiz] = useState<{ id: string; title: string } | null>(null);
+  const [linkQuiz, setLinkQuiz] = useState<{ id: string; title: string } | null>(null);
   const fulfillingRef = useRef(false);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -242,6 +244,10 @@ const Dashboard = () => {
                         <Link className="mr-2 h-4 w-4" />
                         Copiar Link do Funil
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLinkQuiz({ id: quiz.id, title: quiz.title })}>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Compartilhar Link
+                      </DropdownMenuItem>
                       {!quiz.isCopy && (
                         <>
                           <DropdownMenuItem onClick={() => handleDuplicate(quiz.id)}>
@@ -307,6 +313,14 @@ const Dashboard = () => {
         quizTitle={shareQuiz?.title ?? ""}
         open={!!shareQuiz}
         onClose={() => setShareQuiz(null)}
+      />
+
+      {/* Link Share Dialog */}
+      <LinkShareDialog
+        quizId={linkQuiz?.id ?? ""}
+        quizTitle={linkQuiz?.title ?? ""}
+        open={!!linkQuiz}
+        onClose={() => setLinkQuiz(null)}
       />
     </div>
   );
