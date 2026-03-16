@@ -29,8 +29,8 @@ const Login = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <img src={chatFunnelLogo} alt="ChatFunnel" className="mx-auto mb-0" style={{ width: '280px' }} />
-          <p className="mt-1 text-sm text-muted-foreground">Entre na sua conta</p>
+          <img src={chatFunnelLogo} alt="ChatFunnel" className="mx-auto -mb-6" style={{ width: '290px' }} />
+          <p className="text-sm text-muted-foreground">Entre na sua conta</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
