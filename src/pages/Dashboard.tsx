@@ -153,11 +153,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleCopyLink = (id: string) => {
-    const url = `${window.location.origin}/quiz/${id}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: "Link copiado!" });
-  };
 
   const handleLogout = async () => {
     await signOut();
