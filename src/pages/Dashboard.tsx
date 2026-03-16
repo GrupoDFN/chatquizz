@@ -33,6 +33,7 @@ const Dashboard = () => {
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
   const [shareQuiz, setShareQuiz] = useState<{ id: string; title: string } | null>(null);
+  const [linkQuiz, setLinkQuiz] = useState<{ id: string; title: string } | null>(null);
   const fulfillingRef = useRef(false);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
