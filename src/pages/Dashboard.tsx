@@ -15,6 +15,7 @@ import { getUserQuizzes, createQuiz, deleteQuiz, duplicateQuiz } from "@/lib/qui
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ShareDialog from "@/components/ShareDialog";
+import LinkShareDialog from "@/components/LinkShareDialog";
 
 interface QuizRow {
   id: string;
