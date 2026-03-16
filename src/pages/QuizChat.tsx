@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { getQuizFull, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
+import { getQuizFull, resolveQuizId, QuizWithQuestionsAndOptions } from "@/lib/quiz-api";
 import { trackQuizView, trackQuizResponse } from "@/lib/quiz-tracking";
 import { getThemeById, ChatTheme } from "@/lib/chat-themes";
 import { getEndScreenTemplate } from "@/lib/end-screen-templates";
