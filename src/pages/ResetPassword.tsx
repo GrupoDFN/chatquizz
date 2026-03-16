@@ -51,7 +51,7 @@ const ResetPassword = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <img src={chatFunnelLogo} alt="ChatFunnel" className="mx-auto mb-4 h-12" />
+          <img src={chatFunnelLogo} alt="ChatFunnel" className="mx-auto -mb-16" style={{ width: '290px' }} />
           <h1 className="text-2xl font-semibold text-foreground">Nova Senha</h1>
           <p className="mt-1 text-sm text-muted-foreground">Digite sua nova senha</p>
         </div>
