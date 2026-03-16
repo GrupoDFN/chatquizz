@@ -244,6 +244,10 @@ const Dashboard = () => {
                         <Link className="mr-2 h-4 w-4" />
                         Copiar Link do Funil
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLinkQuiz({ id: quiz.id, title: quiz.title })}>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Compartilhar Link
+                      </DropdownMenuItem>
                       {!quiz.isCopy && (
                         <>
                           <DropdownMenuItem onClick={() => handleDuplicate(quiz.id)}>
