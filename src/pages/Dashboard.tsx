@@ -314,6 +314,14 @@ const Dashboard = () => {
         open={!!shareQuiz}
         onClose={() => setShareQuiz(null)}
       />
+
+      {/* Link Share Dialog */}
+      <LinkShareDialog
+        quizId={linkQuiz?.id ?? ""}
+        quizTitle={linkQuiz?.title ?? ""}
+        open={!!linkQuiz}
+        onClose={() => setLinkQuiz(null)}
+      />
     </div>
   );
 };
