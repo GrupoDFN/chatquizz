@@ -167,7 +167,7 @@ const Dashboard = () => {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto flex items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <img src={chatFunnelLogo} alt="ChatFunnel" style={{ height: '70px', marginTop: '-10px', marginBottom: '-10px' }} />
+            <img src={chatFunnelLogo} alt="ChatFunnel" style={{ height: '100px', marginTop: '-20px', marginBottom: '-20px' }} />
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden text-xs text-muted-foreground sm:inline">{user?.email}</span>
