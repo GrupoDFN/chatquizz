@@ -4,6 +4,7 @@ export interface ChatTheme {
   preview: { bg: string; bot: string; user: string; option: string };
   styles: {
     bg: string;
+    bgPattern?: string; // CSS background for chat wallpaper pattern
     header: string;
     headerText: string;
     headerSub: string;
