@@ -509,7 +509,6 @@ const QuizChat = () => {
         </div>
         <p className={`text-[12px] ${theme.styles.headerSub}`}>Online agora</p>
       </header>
-      </header>
 
       {/* Messages */}
       <div
