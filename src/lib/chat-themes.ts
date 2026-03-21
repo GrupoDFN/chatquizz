@@ -146,6 +146,7 @@ export const chatThemes: ChatTheme[] = [
     preview: { bg: "#1a1210", bot: "#ea580c", user: "#231a14", option: "#231a14" },
     styles: {
       bg: "bg-[#1a1210]",
+      bgPattern: "radial-gradient(circle, rgba(234,88,12,0.04) 1px, transparent 1px)",
       header: "bg-[#231a14]",
       headerText: "text-white",
       headerSub: "text-orange-200/50",
