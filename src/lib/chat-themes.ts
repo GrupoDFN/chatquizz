@@ -90,6 +90,7 @@ export const chatThemes: ChatTheme[] = [
     preview: { bg: "#f7f8fa", bot: "#e8ecf1", user: "#4f46e5", option: "#f0f1f5" },
     styles: {
       bg: "bg-[#f7f8fa]",
+      bgPattern: "radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px)",
       header: "bg-white",
       headerText: "text-gray-900",
       headerSub: "text-gray-400",
