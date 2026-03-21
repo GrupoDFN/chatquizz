@@ -358,6 +358,61 @@ const QuizChat = () => {
     loadQuiz();
   }, [id]);
 
+  // Inject tracking scripts
+  useEffect(() => {
+    if (!quiz) return;
+    const quizData = quiz as any;
+    const cleanupElements: HTMLElement[] = [];
+
+    if (quizData.head_scripts) {
+      const container = document.createElement("div");
+      container.innerHTML = quizData.head_scripts;
+      Array.from(container.childNodes).forEach((node) => {
+        if (node.nodeName === "SCRIPT") {
+          const script = document.createElement("script");
+          const src = (node as HTMLScriptElement).src;
+          if (src) script.src = src;
+          else script.textContent = (node as HTMLScriptElement).textContent;
+          Array.from((node as HTMLScriptElement).attributes).forEach((attr) => {
+            if (attr.name !== "src") script.setAttribute(attr.name, attr.value);
+          });
+          document.head.appendChild(script);
+          cleanupElements.push(script);
+        } else {
+          const el = node.cloneNode(true) as HTMLElement;
+          document.head.appendChild(el);
+          cleanupElements.push(el);
+        }
+      });
+    }
+
+    if (quizData.body_scripts) {
+      const container = document.createElement("div");
+      container.innerHTML = quizData.body_scripts;
+      Array.from(container.childNodes).forEach((node) => {
+        if (node.nodeName === "SCRIPT") {
+          const script = document.createElement("script");
+          const src = (node as HTMLScriptElement).src;
+          if (src) script.src = src;
+          else script.textContent = (node as HTMLScriptElement).textContent;
+          Array.from((node as HTMLScriptElement).attributes).forEach((attr) => {
+            if (attr.name !== "src") script.setAttribute(attr.name, attr.value);
+          });
+          document.body.appendChild(script);
+          cleanupElements.push(script);
+        } else {
+          const el = node.cloneNode(true) as HTMLElement;
+          document.body.appendChild(el);
+          cleanupElements.push(el);
+        }
+      });
+    }
+
+    return () => {
+      cleanupElements.forEach((el) => el.parentNode?.removeChild(el));
+    };
+  }, [quiz]);
+
   useEffect(() => {
     if (!quiz || initiated.current) return;
     initiated.current = true;
