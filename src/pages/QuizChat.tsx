@@ -513,7 +513,14 @@ const QuizChat = () => {
       </header>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-4 py-6"
+        style={theme.styles.bgPattern ? {
+          backgroundImage: theme.styles.bgPattern,
+          backgroundSize: "20px 20px",
+        } : undefined}
+      >
         <div className="mx-auto flex max-w-[500px] flex-col gap-3">
           <AnimatePresence>
             {messages.map((msg, idx) => {
