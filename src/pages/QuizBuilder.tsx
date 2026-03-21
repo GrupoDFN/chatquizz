@@ -201,7 +201,7 @@ const QuizBuilder = () => {
   const selectedQuestion = quiz.questions.find((q) => q.id === selectedQuestionId);
 
   /* ── Determine which overlay panel is open ── */
-  const showSidePanel = selectedQuestion || showThemePicker || showEndScreenEditor || endScreenPanel;
+  const showSidePanel = selectedQuestion || showThemePicker || showEndScreenEditor || showTrackingEditor || endScreenPanel;
 
   return (
     <div className="flex h-screen flex-col bg-background">

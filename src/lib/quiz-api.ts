@@ -176,6 +176,8 @@ export async function duplicateQuiz(quizId: string, userId: string, markAsCopy =
       show_analysis_card: full.show_analysis_card,
       show_congrats_card: full.show_congrats_card,
       response_delay: full.response_delay,
+      head_scripts: full.head_scripts,
+      body_scripts: full.body_scripts,
       ...(markAsCopy ? { is_copy: true } as any : {}),
     })
     .select()
