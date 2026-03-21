@@ -33,6 +33,8 @@ export interface QuizRow {
   show_analysis_card: boolean;
   show_congrats_card: boolean;
   response_delay: number;
+  head_scripts: string;
+  body_scripts: string;
   created_at: string;
 }
 
