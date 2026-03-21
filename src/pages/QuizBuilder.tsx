@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Link as LinkIcon, Eye, Palette, PartyPopper, Users } from "lucide-react";
+import { ArrowLeft, Plus, Link as LinkIcon, Eye, Palette, PartyPopper, Users, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getQuizFull,
@@ -34,6 +34,7 @@ const QuizBuilder = () => {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showEndScreenEditor, setShowEndScreenEditor] = useState(false);
+  const [showTrackingEditor, setShowTrackingEditor] = useState(false);
   const [endScreenPanel, setEndScreenPanel] = useState<"analysis" | "congrats" | null>(null);
 
   const loadQuiz = useCallback(async () => {
@@ -200,7 +201,7 @@ const QuizBuilder = () => {
   const selectedQuestion = quiz.questions.find((q) => q.id === selectedQuestionId);
 
   /* ── Determine which overlay panel is open ── */
-  const showSidePanel = selectedQuestion || showThemePicker || showEndScreenEditor || endScreenPanel;
+  const showSidePanel = selectedQuestion || showThemePicker || showEndScreenEditor || showTrackingEditor || endScreenPanel;
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -246,6 +247,20 @@ const QuizBuilder = () => {
             <Button variant="ghost" size="sm" onClick={handleCopyLink}>
               <LinkIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Link</span>
+            </Button>
+            <Button
+              variant={showTrackingEditor ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => {
+                setShowTrackingEditor(!showTrackingEditor);
+                setShowThemePicker(false);
+                setShowEndScreenEditor(false);
+                setSelectedQuestionId(null);
+                setEndScreenPanel(null);
+              }}
+            >
+              <Code className="h-4 w-4" />
+              <span className="hidden sm:inline">Tracking</span>
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate(`/leads/${quiz.id}`)}>
               <Users className="h-4 w-4" />
@@ -419,6 +434,67 @@ const QuizBuilder = () => {
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {showTrackingEditor && (
+            <div className="p-5 space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-foreground">Scripts de Rastreamento</h3>
+                <Button variant="ghost" size="sm" onClick={() => setShowTrackingEditor(false)}>✕</Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Cole seus códigos de tracking (Facebook Pixel, Google Analytics, GTM, etc.) nos campos abaixo. Eles serão injetados na página pública do quiz.
+              </p>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-foreground">Scripts no &lt;head&gt;</label>
+                <textarea
+                  value={(quiz as any).head_scripts || ""}
+                  onChange={async (e) => {
+                    const val = e.target.value;
+                    setQuiz({ ...quiz, head_scripts: val } as any);
+                    try {
+                      const { error } = await (await import("@/integrations/supabase/client")).supabase
+                        .from("quizzes")
+                        .update({ head_scripts: val } as any)
+                        .eq("id", quiz.id);
+                      if (error) throw error;
+                    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
+                  }}
+                  placeholder="<!-- Ex: Facebook Pixel, Google Analytics -->"
+                  rows={6}
+                  className="w-full rounded-md bg-secondary px-3 py-2 text-xs font-mono text-foreground outline-none focus:ring-2 focus:ring-primary resize-y"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-foreground">Scripts no &lt;body&gt;</label>
+                <textarea
+                  value={(quiz as any).body_scripts || ""}
+                  onChange={async (e) => {
+                    const val = e.target.value;
+                    setQuiz({ ...quiz, body_scripts: val } as any);
+                    try {
+                      const { error } = await (await import("@/integrations/supabase/client")).supabase
+                        .from("quizzes")
+                        .update({ body_scripts: val } as any)
+                        .eq("id", quiz.id);
+                      if (error) throw error;
+                    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
+                  }}
+                  placeholder="<!-- Ex: noscript do GTM, scripts de remarketing -->"
+                  rows={6}
+                  className="w-full rounded-md bg-secondary px-3 py-2 text-xs font-mono text-foreground outline-none focus:ring-2 focus:ring-primary resize-y"
+                />
+              </div>
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 space-y-1">
+                <p className="text-xs font-medium text-foreground">💡 Dicas</p>
+                <ul className="text-[11px] text-muted-foreground space-y-0.5 list-disc pl-3">
+                  <li>Facebook Pixel → cole no campo Head</li>
+                  <li>Google Tag Manager → script no Head + noscript no Body</li>
+                  <li>TikTok Pixel → cole no campo Head</li>
+                  <li>Google Analytics (gtag) → cole no campo Head</li>
+                </ul>
+              </div>
             </div>
           )}
 
