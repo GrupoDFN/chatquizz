@@ -269,10 +269,12 @@ export type Database = {
           analysis_subtitle: string
           analysis_title: string
           avatar_url: string | null
+          body_scripts: string
           created_at: string
           end_screen_subtitle: string
           end_screen_template: string
           end_screen_title: string
+          head_scripts: string
           id: string
           is_copy: boolean
           response_delay: number
@@ -288,10 +290,12 @@ export type Database = {
           analysis_subtitle?: string
           analysis_title?: string
           avatar_url?: string | null
+          body_scripts?: string
           created_at?: string
           end_screen_subtitle?: string
           end_screen_template?: string
           end_screen_title?: string
+          head_scripts?: string
           id?: string
           is_copy?: boolean
           response_delay?: number
@@ -307,10 +311,12 @@ export type Database = {
           analysis_subtitle?: string
           analysis_title?: string
           avatar_url?: string | null
+          body_scripts?: string
           created_at?: string
           end_screen_subtitle?: string
           end_screen_template?: string
           end_screen_title?: string
+          head_scripts?: string
           id?: string
           is_copy?: boolean
           response_delay?: number
