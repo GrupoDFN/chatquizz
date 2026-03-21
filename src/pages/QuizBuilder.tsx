@@ -34,6 +34,7 @@ const QuizBuilder = () => {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showEndScreenEditor, setShowEndScreenEditor] = useState(false);
+  const [showTrackingEditor, setShowTrackingEditor] = useState(false);
   const [endScreenPanel, setEndScreenPanel] = useState<"analysis" | "congrats" | null>(null);
 
   const loadQuiz = useCallback(async () => {
