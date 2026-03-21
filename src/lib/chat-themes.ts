@@ -4,6 +4,7 @@ export interface ChatTheme {
   preview: { bg: string; bot: string; user: string; option: string };
   styles: {
     bg: string;
+    bgPattern?: string; // CSS background for chat wallpaper pattern
     header: string;
     headerText: string;
     headerSub: string;
@@ -33,6 +34,7 @@ export const chatThemes: ChatTheme[] = [
     preview: { bg: "#1a1f2e", bot: "#3b82f6", user: "#2a2f3e", option: "#242938" },
     styles: {
       bg: "bg-[#111827]",
+      bgPattern: "radial-gradient(circle, rgba(59,130,246,0.03) 1px, transparent 1px)",
       header: "bg-[#1a2035]",
       headerText: "text-white",
       headerSub: "text-white/50",
@@ -60,12 +62,13 @@ export const chatThemes: ChatTheme[] = [
     preview: { bg: "#0b141a", bot: "#005c4b", user: "#202c33", option: "#1f2c33" },
     styles: {
       bg: "bg-[#0b141a]",
+      bgPattern: "url(\"data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zM20 60h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zM20 100h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zM20 140h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zM20 180h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2zm40 0h2v2h-2z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E\")",
       header: "bg-[#1f2c33]",
       headerText: "text-white",
       headerSub: "text-white/60",
       botBubble: "bg-[#005c4b]",
       botText: "text-white",
-      userBubble: "bg-[#005c4b]",
+      userBubble: "bg-[#1f2c33]",
       userText: "text-white",
       optionBg: "bg-[#1f2c33]",
       optionText: "text-white",
@@ -87,6 +90,7 @@ export const chatThemes: ChatTheme[] = [
     preview: { bg: "#f7f8fa", bot: "#e8ecf1", user: "#4f46e5", option: "#f0f1f5" },
     styles: {
       bg: "bg-[#f7f8fa]",
+      bgPattern: "radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px)",
       header: "bg-white",
       headerText: "text-gray-900",
       headerSub: "text-gray-400",
@@ -114,6 +118,7 @@ export const chatThemes: ChatTheme[] = [
     preview: { bg: "#13111c", bot: "#7c3aed", user: "#1e1b2e", option: "#1e1b2e" },
     styles: {
       bg: "bg-[#13111c]",
+      bgPattern: "radial-gradient(circle, rgba(124,58,237,0.05) 1px, transparent 1px)",
       header: "bg-[#1a1728]",
       headerText: "text-white",
       headerSub: "text-purple-300/50",
@@ -141,6 +146,7 @@ export const chatThemes: ChatTheme[] = [
     preview: { bg: "#1a1210", bot: "#ea580c", user: "#231a14", option: "#231a14" },
     styles: {
       bg: "bg-[#1a1210]",
+      bgPattern: "radial-gradient(circle, rgba(234,88,12,0.04) 1px, transparent 1px)",
       header: "bg-[#231a14]",
       headerText: "text-white",
       headerSub: "text-orange-200/50",
