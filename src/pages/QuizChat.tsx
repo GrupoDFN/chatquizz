@@ -490,26 +490,25 @@ const QuizChat = () => {
   return (
     <div className={`flex h-svh flex-col ${theme.styles.bg}`}>
       {/* Header */}
-      <header className={`flex items-center gap-3 border-b px-4 py-3 ${theme.styles.header} ${theme.styles.borderColor}`}>
+      <header className={`flex flex-col items-center gap-1 border-b px-4 py-3 ${theme.styles.header} ${theme.styles.borderColor}`}>
         <div className="relative">
-          <div className={`h-11 w-11 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden ${theme.styles.avatarBg} ${theme.styles.avatarText}`}>
+          <div className={`h-14 w-14 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden ${theme.styles.avatarBg} ${theme.styles.avatarText}`}>
             {quiz.avatar_url ? (
               <img src={quiz.avatar_url} alt="" className="h-full w-full object-cover" />
             ) : (
               "Q"
             )}
           </div>
-          <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 ${theme.styles.statusDot}`} />
+          <span className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 ${theme.styles.statusDot}`} />
         </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <p className={`text-[15px] font-semibold ${theme.styles.headerText}`}>{quiz.title}</p>
-            {quiz.show_verified_badge && (
-              <CheckCircle2 className={`h-4 w-4 ${theme.styles.footerAccent}`} />
-            )}
-          </div>
-          <p className={`text-[12px] ${theme.styles.headerSub}`}>Online agora</p>
+        <div className="flex items-center gap-1.5">
+          <p className={`text-[15px] font-semibold ${theme.styles.headerText}`}>{quiz.title}</p>
+          {quiz.show_verified_badge && (
+            <CheckCircle2 className="h-4 w-4 text-blue-500 fill-blue-500" />
+          )}
         </div>
+        <p className={`text-[12px] ${theme.styles.headerSub}`}>Online agora</p>
+      </header>
       </header>
 
       {/* Messages */}
