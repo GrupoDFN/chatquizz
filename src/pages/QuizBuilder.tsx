@@ -248,6 +248,20 @@ const QuizBuilder = () => {
               <LinkIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Link</span>
             </Button>
+            <Button
+              variant={showTrackingEditor ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => {
+                setShowTrackingEditor(!showTrackingEditor);
+                setShowThemePicker(false);
+                setShowEndScreenEditor(false);
+                setSelectedQuestionId(null);
+                setEndScreenPanel(null);
+              }}
+            >
+              <Code className="h-4 w-4" />
+              <span className="hidden sm:inline">Tracking</span>
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate(`/leads/${quiz.id}`)}>
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Leads</span>
