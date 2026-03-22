@@ -2,221 +2,234 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter, Trend } from 'k6/metrics';
 
-// ─── CONFIG ───
-const BASE_URL = 'https://dyzccknotyujnmdrhdhs.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5emNja25vdHl1am5tZHJoZGhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NTQ4NDYsImV4cCI6MjA4OTEzMDg0Nn0.SrxNT9x04XRanE93UTM9cU_s7RLGfPzfAyO0u3stQLw';
+var BASE_URL = 'https://dyzccknotyujnmdrhdhs.supabase.co';
+var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5emNja25vdHl1am5tZHJoZGhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NTQ4NDYsImV4cCI6MjA4OTEzMDg0Nn0.SrxNT9x04XRanE93UTM9cU_s7RLGfPzfAyO0u3stQLw';
 
-const GET_HEADERS = {
+var GET_HEADERS = {
   'apikey': ANON_KEY,
-  'Authorization': `Bearer ${ANON_KEY}`,
+  'Authorization': 'Bearer ' + ANON_KEY,
   'Accept': 'application/json',
 };
 
-const POST_HEADERS = {
+var POST_HEADERS = {
   'apikey': ANON_KEY,
-  'Authorization': `Bearer ${ANON_KEY}`,
+  'Authorization': 'Bearer ' + ANON_KEY,
   'Content-Type': 'application/json',
   'Prefer': 'return=minimal',
 };
 
-// ─── METRICS ───
-const flowErrors = new Counter('flow_errors');
-const flowSuccess = new Counter('flow_success');
-const quizLoadTime = new Trend('quiz_load_time');
-const questionsLoadTime = new Trend('questions_load_time');
-const optionsLoadTime = new Trend('options_load_time');
-const responseSubmitTime = new Trend('response_submit_time');
-const totalFlowTime = new Trend('total_flow_time');
+var flowErrors = new Counter('flow_errors');
+var flowSuccess = new Counter('flow_success');
+var quizLoadTime = new Trend('quiz_load_time');
+var questionsLoadTime = new Trend('questions_load_time');
+var optionsLoadTime = new Trend('options_load_time');
+var responseSubmitTime = new Trend('response_submit_time');
+var totalFlowTime = new Trend('total_flow_time');
 
-// ─── SCENARIO ───
-export const options = {
+export var options = {
   scenarios: {
     stress: {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
         { duration: '30s', target: 20 },
-        { duration: '1m',  target: 50 },
-        { duration: '1m',  target: 100 },
-        { duration: '1m',  target: 100 },
+        { duration: '1m', target: 50 },
+        { duration: '1m', target: 100 },
+        { duration: '1m', target: 100 },
         { duration: '30s', target: 0 },
       ],
     },
   },
   thresholds: {
-    'flow_success':      ['count>0'],
-    'flow_errors':       ['count<100'],
-    'http_req_failed':   ['rate<0.05'],
+    'flow_success': ['count>0'],
+    'flow_errors': ['count<100'],
+    'http_req_failed': ['rate<0.05'],
     'http_req_duration': ['p(95)<3000'],
-    'total_flow_time':   ['p(95)<15000'],
+    'total_flow_time': ['p(95)<15000'],
   },
 };
 
 function generateSessionId() {
-  const chars = '0123456789ABCDEF';
-  let r = '';
-  for (let i = 0; i < 8; i++) r += chars.charAt(Math.floor(Math.random() * chars.length));
+  var chars = '0123456789ABCDEF';
+  var r = '';
+  for (var i = 0; i < 8; i++) {
+    r += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
   return r;
 }
 
 function safeParse(body) {
-  try { return JSON.parse(body); } catch (_) { return null; }
+  try {
+    return JSON.parse(body);
+  } catch (e) {
+    return null;
+  }
 }
 
-// ─── RESOLVE SLUG (setup phase, runs once) ───
-let resolvedSlug = null;
-
 export function setup() {
-  // If user provided a slug via env, try it first
-  const envSlug = __ENV.QUIZ_SLUG || '';
+  var envSlug = __ENV.QUIZ_SLUG || '';
 
-  if (envSlug) {
-    console.log(`[SETUP] Trying user-provided slug: "${envSlug}"`);
-    const res = http.get(
-      `${BASE_URL}/rest/v1/quizzes?slug=eq.${encodeURIComponent(envSlug)}&select=id,slug&limit=1`,
+  if (envSlug !== '') {
+    console.log('[SETUP] Trying user-provided slug: "' + envSlug + '"');
+    var res = http.get(
+      BASE_URL + '/rest/v1/quizzes?slug=eq.' + encodeURIComponent(envSlug) + '&select=id,slug&limit=1',
       { headers: GET_HEADERS }
     );
-    const data = safeParse(res.body);
+    var data = safeParse(res.body);
     if (Array.isArray(data) && data.length > 0) {
-      console.log(`[SETUP] ✅ Slug "${envSlug}" is valid, quiz id=${data[0].id}`);
+      console.log('[SETUP] Slug "' + envSlug + '" is valid, quiz id=' + data[0].id);
       return { slug: envSlug };
     }
-    console.log(`[SETUP] ⚠️ Slug "${envSlug}" not found (status=${res.status}, body=${res.body}). Falling back to auto-detect...`);
+    console.log('[SETUP] Slug "' + envSlug + '" not found. status=' + res.status + ' body=' + res.body);
   }
 
-  // Fallback: fetch any published quiz (slug IS NOT NULL)
   console.log('[SETUP] Auto-detecting a published quiz...');
-  const fallbackRes = http.get(
-    `${BASE_URL}/rest/v1/quizzes?slug=not.is.null&select=id,slug,title&limit=1&order=created_at.desc`,
+  var fallbackRes = http.get(
+    BASE_URL + '/rest/v1/quizzes?slug=not.is.null&select=id,slug,title&limit=1&order=created_at.desc',
     { headers: GET_HEADERS }
   );
 
-  const fallbackData = safeParse(fallbackRes.body);
+  var fallbackData = safeParse(fallbackRes.body);
   if (!Array.isArray(fallbackData) || fallbackData.length === 0) {
-    console.log(`[SETUP] ❌ No published quizzes found! status=${fallbackRes.status} body=${fallbackRes.body}`);
-    console.log('[SETUP] ❌ Cannot run test without a valid quiz. Publish a quiz with a slug first.');
-    return { slug: null };
+    console.log('[SETUP] No published quizzes found! status=' + fallbackRes.status + ' body=' + fallbackRes.body);
+    return { slug: '' };
   }
 
-  const chosen = fallbackData[0];
-  console.log(`[SETUP] ✅ Auto-detected quiz: slug="${chosen.slug}" id=${chosen.id} title="${chosen.title}"`);
+  var chosen = fallbackData[0];
+  console.log('[SETUP] Auto-detected quiz: slug="' + chosen.slug + '" id=' + chosen.id + ' title="' + chosen.title + '"');
   return { slug: chosen.slug };
 }
 
 export default function (data) {
-  const QUIZ_SLUG = data.slug;
+  var quizSlug = data.slug;
 
-  if (!QUIZ_SLUG) {
-    console.log('[SKIP] No valid slug available. Skipping iteration.');
+  if (!quizSlug || quizSlug === '') {
+    console.log('[SKIP] No valid slug available.');
     flowErrors.add(1);
     return;
   }
 
-  const flowStart = Date.now();
-  const sessionId = generateSessionId();
+  var flowStart = Date.now();
+  var sessionId = generateSessionId();
 
-  // ── 1. RESOLVE SLUG ──
-  const slugRes = http.get(
-    `${BASE_URL}/rest/v1/quizzes?slug=eq.${encodeURIComponent(QUIZ_SLUG)}&select=id,title,theme,show_analysis_card,show_congrats_card,response_delay,end_screen_template,end_screen_title,end_screen_subtitle,analysis_title,analysis_subtitle`,
+  // 1. RESOLVE SLUG
+  var slugRes = http.get(
+    BASE_URL + '/rest/v1/quizzes?slug=eq.' + encodeURIComponent(quizSlug) + '&select=id,title,theme,show_analysis_card,show_congrats_card,response_delay,end_screen_template,end_screen_title,end_screen_subtitle,analysis_title,analysis_subtitle',
     { headers: GET_HEADERS, tags: { step: 'resolve_slug' } }
   );
 
-  if (!check(slugRes, { 'slug: status 200': (r) => r.status === 200 })) {
-    console.log(`[SLUG FAIL] status=${slugRes.status} body=${slugRes.body}`);
+  if (!check(slugRes, { 'slug: status 200': function (r) { return r.status === 200; } })) {
+    console.log('[SLUG FAIL] status=' + slugRes.status + ' body=' + slugRes.body);
     flowErrors.add(1);
     return;
   }
 
-  const quizzes = safeParse(slugRes.body);
-  if (!check(null, { 'slug: quiz found': () => Array.isArray(quizzes) && quizzes.length > 0 })) {
-    console.log(`[SLUG FAIL] empty or invalid response: ${slugRes.body}`);
+  var quizzes = safeParse(slugRes.body);
+  if (!Array.isArray(quizzes) || quizzes.length === 0) {
+    console.log('[SLUG FAIL] empty or invalid response: ' + slugRes.body);
     flowErrors.add(1);
     return;
   }
 
-  const quiz = quizzes[0];
-  const quizId = quiz.id;
+  var quiz = quizzes[0];
+  var quizId = quiz.id;
   quizLoadTime.add(slugRes.timings.duration);
-  console.log(`[OK] Quiz resolved: slug="${QUIZ_SLUG}" id=${quizId} title="${quiz.title}"`);
+  console.log('[OK] Quiz resolved: slug="' + quizSlug + '" id=' + quizId + ' title="' + quiz.title + '"');
 
-  // ── 2. LOAD QUESTIONS ──
-  const qRes = http.get(
-    `${BASE_URL}/rest/v1/questions?quiz_id=eq.${quizId}&select=id,text,order,is_start_node,pre_messages,type&order=order.asc`,
+  // 2. LOAD QUESTIONS
+  var qRes = http.get(
+    BASE_URL + '/rest/v1/questions?quiz_id=eq.' + quizId + '&select=id,text,order,is_start_node,pre_messages,type&order=order.asc',
     { headers: GET_HEADERS, tags: { step: 'load_questions' } }
   );
 
-  if (!check(qRes, { 'questions: status 200': (r) => r.status === 200 })) {
-    console.log(`[QUESTIONS FAIL] status=${qRes.status} body=${qRes.body}`);
+  if (!check(qRes, { 'questions: status 200': function (r) { return r.status === 200; } })) {
+    console.log('[QUESTIONS FAIL] status=' + qRes.status + ' body=' + qRes.body);
     flowErrors.add(1);
     return;
   }
 
-  const questions = safeParse(qRes.body);
-
-  if (!check(null, { 'questions loaded': () => Array.isArray(questions) && questions.length > 0 })) {
-    console.log(`[QUESTIONS FAIL] empty array or parse error. body=${String(qRes.body).substring(0, 500)}`);
+  var questions = safeParse(qRes.body);
+  if (!Array.isArray(questions) || questions.length === 0) {
+    console.log('[QUESTIONS FAIL] empty or parse error. body=' + String(qRes.body).substring(0, 500));
     flowErrors.add(1);
     return;
   }
 
   questionsLoadTime.add(qRes.timings.duration);
-  console.log(`[OK] ${questions.length} questions loaded`);
+  console.log('[OK] ' + questions.length + ' questions loaded');
 
-  // ── 3. LOAD OPTIONS ──
-  const qIds = questions.map((q) => q.id).join(',');
-  const oRes = http.get(
-    `${BASE_URL}/rest/v1/options?question_id=in.(${qIds})&select=id,question_id,label,next_question_id`,
+  // 3. LOAD OPTIONS
+  var qIds = [];
+  for (var qi = 0; qi < questions.length; qi++) {
+    qIds.push(questions[qi].id);
+  }
+  var oRes = http.get(
+    BASE_URL + '/rest/v1/options?question_id=in.(' + qIds.join(',') + ')&select=id,question_id,label,next_question_id',
     { headers: GET_HEADERS, tags: { step: 'load_options' } }
   );
 
-  let allOptions = [];
-  if (check(oRes, { 'options: status 200': (r) => r.status === 200 })) {
+  var allOptions = [];
+  if (check(oRes, { 'options: status 200': function (r) { return r.status === 200; } })) {
     allOptions = safeParse(oRes.body) || [];
     optionsLoadTime.add(oRes.timings.duration);
   } else {
-    console.log(`[OPTIONS WARN] status=${oRes.status} body=${oRes.body}`);
+    console.log('[OPTIONS WARN] status=' + oRes.status + ' body=' + oRes.body);
   }
 
-  const qMap = {};
-  for (const q of questions) {
-    qMap[q.id] = { ...q, options: allOptions.filter((o) => o.question_id === q.id) };
+  var qMap = {};
+  for (var mi = 0; mi < questions.length; mi++) {
+    var q = questions[mi];
+    var opts = [];
+    for (var oi = 0; oi < allOptions.length; oi++) {
+      if (allOptions[oi].question_id === q.id) {
+        opts.push(allOptions[oi]);
+      }
+    }
+    qMap[q.id] = { id: q.id, text: q.text, type: q.type, is_start_node: q.is_start_node, options: opts };
   }
 
-  console.log(`[OK] ${allOptions.length} options loaded across ${questions.length} questions`);
+  console.log('[OK] ' + allOptions.length + ' options loaded across ' + questions.length + ' questions');
 
-  // ── 4. REGISTER VIEW ──
-  const viewRes = http.post(
-    `${BASE_URL}/rest/v1/quiz_views`,
+  // 4. REGISTER VIEW
+  var viewRes = http.post(
+    BASE_URL + '/rest/v1/quiz_views',
     JSON.stringify({ quiz_id: quizId, session_id: sessionId }),
     { headers: POST_HEADERS, tags: { step: 'register_view' } }
   );
-  check(viewRes, { 'view registered': (r) => r.status === 201 || r.status === 200 });
+  check(viewRes, { 'view registered': function (r) { return r.status === 201 || r.status === 200; } });
 
-  // ── 5. WALK THE QUIZ FLOW ──
-  let current = questions.find((q) => q.is_start_node);
+  // 5. WALK THE QUIZ FLOW
+  var current = null;
+  for (var si = 0; si < questions.length; si++) {
+    if (questions[si].is_start_node) {
+      current = qMap[questions[si].id];
+      break;
+    }
+  }
+
   if (!current) {
-    console.log('[FAIL] No start node found among questions');
+    console.log('[FAIL] No start node found');
     flowErrors.add(1);
     return;
   }
 
-  let step = 0;
-  const MAX_STEPS = 50;
+  var step = 0;
+  var MAX_STEPS = 50;
 
   while (current && step < MAX_STEPS) {
     sleep(Math.random() * 1.5 + 0.3);
 
-    const node = qMap[current.id];
-    const opts = node.options || [];
+    var node = current;
+    var nodeOpts = node.options || [];
 
-    if (node.type === 'question' && opts.length > 0) {
-      const chosen = opts[Math.floor(Math.random() * opts.length)];
+    if (node.type === 'question' && nodeOpts.length > 0) {
+      var chosen = nodeOpts[Math.floor(Math.random() * nodeOpts.length)];
 
-      const rRes = http.post(
-        `${BASE_URL}/rest/v1/quiz_responses`,
+      var rRes = http.post(
+        BASE_URL + '/rest/v1/quiz_responses',
         JSON.stringify({
           quiz_id: quizId,
-          question_id: current.id,
+          question_id: node.id,
           option_id: chosen.id,
           session_id: sessionId,
           step_order: step,
@@ -224,17 +237,25 @@ export default function (data) {
         { headers: POST_HEADERS, tags: { step: 'submit_response' } }
       );
 
-      if (!check(rRes, { 'response submitted': (r) => r.status === 201 || r.status === 200 })) {
-        console.log(`[RESPONSE FAIL] step=${step} status=${rRes.status} body=${rRes.body}`);
+      if (!check(rRes, { 'response submitted': function (r) { return r.status === 201 || r.status === 200; } })) {
+        console.log('[RESPONSE FAIL] step=' + step + ' status=' + rRes.status + ' body=' + rRes.body);
         flowErrors.add(1);
         return;
       }
       responseSubmitTime.add(rRes.timings.duration);
 
-      current = chosen.next_question_id ? qMap[chosen.next_question_id] || null : null;
+      if (chosen.next_question_id && qMap[chosen.next_question_id]) {
+        current = qMap[chosen.next_question_id];
+      } else {
+        current = null;
+      }
     } else if (node.type === 'text') {
-      const connector = opts[0];
-      current = connector && connector.next_question_id ? qMap[connector.next_question_id] || null : null;
+      var connector = nodeOpts.length > 0 ? nodeOpts[0] : null;
+      if (connector && connector.next_question_id && qMap[connector.next_question_id]) {
+        current = qMap[connector.next_question_id];
+      } else {
+        current = null;
+      }
     } else {
       current = null;
     }
@@ -242,12 +263,12 @@ export default function (data) {
     step++;
   }
 
-  // ── 6. SIMULATE END SCREEN ──
+  // 6. SIMULATE END SCREEN
   if (quiz.show_analysis_card) {
     sleep((quiz.response_delay || 1000) / 1000);
   }
 
   totalFlowTime.add(Date.now() - flowStart);
   flowSuccess.add(1);
-  console.log(`[OK] Flow complete: session=${sessionId} steps=${step}`);
+  console.log('[OK] Flow complete: session=' + sessionId + ' steps=' + step);
 }
