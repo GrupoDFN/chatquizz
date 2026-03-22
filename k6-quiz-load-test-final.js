@@ -265,7 +265,7 @@ export default function (data) {
       current = chosen.next_question_id ? questionById[chosen.next_question_id] || null : null;
     } else if (current.type === 'text') {
       const connector = nodeOptions[0];
-      current = connector?.next_question_id ? questionById[connector.next_question_id] || null : null;
+      current = connector && connector.next_question_id ? questionById[connector.next_question_id] || null : null;
     } else {
       current = null;
     }
