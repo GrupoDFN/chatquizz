@@ -52,7 +52,7 @@ export const options = {
 const safeParse = (body) => {
   try {
     return JSON.parse(body);
-  } catch {
+  } catch (e) {
     return null;
   }
 };
@@ -89,7 +89,7 @@ const getFallbackSlug = () => {
 };
 
 export function setup() {
-  const envSlug = __ENV.QUIZ_SLUG?.trim() || '';
+  const envSlug = (__ENV.QUIZ_SLUG || '').trim();
 
   if (envSlug) {
     const { res, data, found } = getQuizBySlug(envSlug);
@@ -116,7 +116,7 @@ export function setup() {
 }
 
 export default function (data) {
-  const slug = data?.slug || '';
+  const slug = (data && data.slug) || '';
 
   if (!slug) {
     console.log('[FLOW] Abort: no valid slug from setup()');
