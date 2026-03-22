@@ -5,7 +5,6 @@ import { Counter, Trend } from 'k6/metrics';
 // ─── CONFIG ───
 const BASE_URL = 'https://dyzccknotyujnmdrhdhs.supabase.co';
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5emNja25vdHl1am5tZHJoZGhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NTQ4NDYsImV4cCI6MjA4OTEzMDg0Nn0.SrxNT9x04XRanE93UTM9cU_s7RLGfPzfAyO0u3stQLw';
-const QUIZ_SLUG = __ENV.QUIZ_SLUG || 'meu-quiz';
 
 const GET_HEADERS = {
   'apikey': ANON_KEY,
@@ -64,7 +63,55 @@ function safeParse(body) {
   try { return JSON.parse(body); } catch (_) { return null; }
 }
 
-export default function () {
+// ─── RESOLVE SLUG (setup phase, runs once) ───
+let resolvedSlug = null;
+
+export function setup() {
+  // If user provided a slug via env, try it first
+  const envSlug = __ENV.QUIZ_SLUG || '';
+
+  if (envSlug) {
+    console.log(`[SETUP] Trying user-provided slug: "${envSlug}"`);
+    const res = http.get(
+      `${BASE_URL}/rest/v1/quizzes?slug=eq.${encodeURIComponent(envSlug)}&select=id,slug&limit=1`,
+      { headers: GET_HEADERS }
+    );
+    const data = safeParse(res.body);
+    if (Array.isArray(data) && data.length > 0) {
+      console.log(`[SETUP] ✅ Slug "${envSlug}" is valid, quiz id=${data[0].id}`);
+      return { slug: envSlug };
+    }
+    console.log(`[SETUP] ⚠️ Slug "${envSlug}" not found (status=${res.status}, body=${res.body}). Falling back to auto-detect...`);
+  }
+
+  // Fallback: fetch any published quiz (slug IS NOT NULL)
+  console.log('[SETUP] Auto-detecting a published quiz...');
+  const fallbackRes = http.get(
+    `${BASE_URL}/rest/v1/quizzes?slug=not.is.null&select=id,slug,title&limit=1&order=created_at.desc`,
+    { headers: GET_HEADERS }
+  );
+
+  const fallbackData = safeParse(fallbackRes.body);
+  if (!Array.isArray(fallbackData) || fallbackData.length === 0) {
+    console.log(`[SETUP] ❌ No published quizzes found! status=${fallbackRes.status} body=${fallbackRes.body}`);
+    console.log('[SETUP] ❌ Cannot run test without a valid quiz. Publish a quiz with a slug first.');
+    return { slug: null };
+  }
+
+  const chosen = fallbackData[0];
+  console.log(`[SETUP] ✅ Auto-detected quiz: slug="${chosen.slug}" id=${chosen.id} title="${chosen.title}"`);
+  return { slug: chosen.slug };
+}
+
+export default function (data) {
+  const QUIZ_SLUG = data.slug;
+
+  if (!QUIZ_SLUG) {
+    console.log('[SKIP] No valid slug available. Skipping iteration.');
+    flowErrors.add(1);
+    return;
+  }
+
   const flowStart = Date.now();
   const sessionId = generateSessionId();
 
@@ -90,7 +137,7 @@ export default function () {
   const quiz = quizzes[0];
   const quizId = quiz.id;
   quizLoadTime.add(slugRes.timings.duration);
-  console.log(`[OK] Quiz resolved: id=${quizId} title="${quiz.title}"`);
+  console.log(`[OK] Quiz resolved: slug="${QUIZ_SLUG}" id=${quizId} title="${quiz.title}"`);
 
   // ── 2. LOAD QUESTIONS ──
   const qRes = http.get(
@@ -105,10 +152,9 @@ export default function () {
   }
 
   const questions = safeParse(qRes.body);
-  console.log(`[DEBUG] questions response (first 500 chars): ${String(qRes.body).substring(0, 500)}`);
 
   if (!check(null, { 'questions loaded': () => Array.isArray(questions) && questions.length > 0 })) {
-    console.log(`[QUESTIONS FAIL] parsed=${JSON.stringify(questions)}`);
+    console.log(`[QUESTIONS FAIL] empty array or parse error. body=${String(qRes.body).substring(0, 500)}`);
     flowErrors.add(1);
     return;
   }
@@ -149,7 +195,7 @@ export default function () {
   // ── 5. WALK THE QUIZ FLOW ──
   let current = questions.find((q) => q.is_start_node);
   if (!current) {
-    console.log('[FAIL] No start node');
+    console.log('[FAIL] No start node found among questions');
     flowErrors.add(1);
     return;
   }
