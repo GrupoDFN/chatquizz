@@ -1,69 +1,52 @@
 const http = require('http');
-// Cria um servidor bobo só para o Render achar que é um site
-http.createServer((req, res) => res.end('Worker Is Running')).listen(process.env.PORT || 10000);
-
-console.log("✅ Servidor de fachada ativo na porta", process.env.PORT || 10000);
-
-console.log("DEBUG: Versão 3.0 Otimizada para 1200 VUs - Plano PRO");
-const { createClient } = require('@supabase/supabase-js');
 const Redis = require('ioredis');
+const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  'https://weizgspqnjhqxycnkvvh.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlaXpnc3BxbmpocXh5Y25rdnZoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDE5Nzk1MiwiZXhwIjoyMDg5NzczOTUyfQ.Rib0YGJmPCeW9GShNtV47Q-OGxBkbivvwusbS7Z_pag'
-);
+// 1. Servidor de Fachada para o Render (Plano Free)
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Worker ORIIS is Live');
+});
+server.keepAliveTimeout = 120000;
+server.listen(process.env.PORT || 10000);
 
-const redisUrl = process.env.REDIS_URL || 'redis://:L7YX64H4a2ORirc2YGO3hT61eXMMyTpB@redis-15192.c336.samerica-east1-1.gce.cloud.redislabs.com:15192';
-const redis = new Redis(redisUrl);
+// 2. Configurações (Use suas variáveis de ambiente no Render)
+const redis = new Redis(process.env.REDIS_URL);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-let processandoAgora = false;
+async function processarFila() {
+    console.log("🚀 Worker em modo BATCH ativo e aguardando...");
 
-async function processar() {
-  if (processandoAgora) return; // Evita atropelar o banco se ele estiver lento
-  processandoAgora = true;
+    while (true) {
+        try {
+            // Pega até 50 itens da fila de uma vez para não sobrecarregar o banco
+            const registros = await redis.lrange("fila_respostas", 0, 49);
 
-  try {
-    // Aumentamos para 500 para reduzir o número de viagens ao banco (Disk IO)
-    const items = await redis.lrange("fila_final_sucesso", 0, 499);
-    if (!items || items.length === 0) {
-      processandoAgora = false;
-      return;
-    }
+            if (registros.length > 0) {
+                console.log(`📦 Processando lote de ${registros.length} registros...`);
+                
+                const dadosParaInserir = registros.map(r => JSON.parse(r));
 
-    const batch = [];
-    for (const item of items) {
-      try {
-        const parsed = JSON.parse(item);
-        if (parsed.quiz_id) { 
-          batch.push({
-            quiz_id: parsed.quiz_id,
-            session_id: String(parsed.session_id),
-            question_id: parsed.question_id,
-            option_id: parsed.option_id,
-            step_order: Number(parsed.step_order)
-          });
+                // Inserção em massa no Supabase (Muito mais rápido que um por um)
+                const { error } = await supabase
+                    .from('respostas_quiz')
+                    .insert(dadosParaInserir);
+
+                if (!error) {
+                    // Remove apenas os itens que acabamos de processar com sucesso
+                    await redis.ltrim("fila_respostas", registros.length, -1);
+                    console.log("✅ Lote inserido com sucesso!");
+                } else {
+                    console.error("❌ Erro ao inserir lote no Supabase:", error.message);
+                }
+            }
+        } catch (err) {
+            console.error("🔥 Erro crítico no Worker:", err.message);
         }
-      } catch (e) { continue; }
-    }
 
-    if (batch.length > 0) {
-      const { error } = await supabase.from('quiz_responses').insert(batch);
-      
-      if (!error) {
-        console.log(`✅ DISCO OK: Salvei lote de ${batch.length} registros.`);
-        await redis.ltrim("fila_final_sucesso", items.length, -1);
-      } else {
-        // Se der erro de timeout (522), o lote continua no Redis para a próxima tentativa
-        console.error("❌ Alerta Supabase:", error.message);
-      }
+        // Pequena pausa para evitar loop infinito de erro e poupar CPU
+        await new Promise(resolve => setTimeout(resolve, 500));
     }
-  } catch (err) { 
-    console.error("💥 Erro de conexão:", err.message); 
-  } finally {
-    processandoAgora = false;
-  }
 }
 
-// Aumentamos o intervalo para 2 segundos para estabilizar o Disk IO Budget
-setInterval(processar, 2000);
-console.log("🚀 Worker ESTABILIZADO (2s) aguardando dados...");
+processarFila();
