@@ -1,3 +1,9 @@
+const http = require('http');
+// Cria um servidor bobo só para o Render achar que é um site
+http.createServer((req, res) => res.end('Worker Is Running')).listen(process.env.PORT || 10000);
+
+console.log("✅ Servidor de fachada ativo na porta", process.env.PORT || 10000);
+
 console.log("DEBUG: Versão 3.0 Otimizada para 1200 VUs - Plano PRO");
 const { createClient } = require('@supabase/supabase-js');
 const Redis = require('ioredis');
